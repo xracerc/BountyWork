@@ -232,14 +232,15 @@ def load_users():
         return json.load(f)
 
 def save_users(d):
+    """Save users locally AND synchronously back up to Gist. Never loses data."""
     with open(USERS_FILE,"w",encoding="utf-8") as f:
         json.dump(d,f,indent=2,ensure_ascii=False)
-    # Async backup to GitHub Gist so data survives redeploys
+    # Synchronous Gist backup — waits for confirmation before returning
     if GIST_TOKEN and GIST_ID:
-        threading.Thread(target=_backup_to_gist, args=(d,), daemon=True).start()
+        _backup_to_gist(d)
 
 def _backup_to_gist(data):
-    """Write users data to a GitHub Gist for persistence across redeploys."""
+    """Synchronously write users data to GitHub Gist."""
     try:
         body = json.dumps({
             "files": {"users.json": {"content": json.dumps(data, ensure_ascii=False)}}
@@ -251,13 +252,16 @@ def _backup_to_gist(data):
                 "Authorization": f"token {GIST_TOKEN}",
                 "Content-Type": "application/json",
                 "User-Agent": "BountyworkCardsServer/1.0",
+                "Accept": "application/vnd.github.v3+json",
             }
         )
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=15) as r:
             if r.status == 200:
-                print(f"[{_ts()}] Gist backup OK ({len(data.get('users',{}))} users)")
+                print(f"[{_ts()}] Gist saved: {len(data.get('users',{}))} users")
+                return True
     except Exception as e:
-        print(f"[{_ts()}] Gist backup failed: {e}")
+        print(f"[{_ts()}] Gist backup ERROR: {e}")
+    return False
 
 def _restore_from_gist():
     """Fetch users data from GitHub Gist on startup."""
@@ -694,25 +698,26 @@ if __name__ == "__main__":
     print(f"  Template pool  : {sum(len(v) for v in TEMPLATES.values())} unique cards")
     print("="*55)
 
-    # ── USERS: restore from Gist → local file → fresh ─────────────────────────
-    if os.path.exists(USERS_FILE):
+    # ── USERS: always prefer Gist (most up-to-date) then local, then fresh ─────
+    print(f"  Checking Gist for latest user data...")
+    gist_data = _restore_from_gist()
+
+    if gist_data and gist_data.get("users"):
+        # Write Gist data to local file (authoritative source)
+        with open(USERS_FILE,"w",encoding="utf-8") as f:
+            json.dump(gist_data,f,indent=2,ensure_ascii=False)
+        print(f"  Restored {len(gist_data['users'])} user(s) from Gist backup!")
+    elif os.path.exists(USERS_FILE):
         d = load_users()
         total = len(d.get("users",{}))
-        print(f"  Loaded {total} existing user(s) from local file")
-        # Also try Gist in case it has newer data (more users signed up on Render)
-        gist_data = _restore_from_gist()
-        if gist_data and len(gist_data.get("users",{})) > total:
-            save_users(gist_data)
-            print(f"  Gist had more users ({len(gist_data['users'])}) — restored from Gist")
+        print(f"  Loaded {total} user(s) from local file (no Gist data)")
+        # Back up local to Gist now
+        _backup_to_gist(d)
     else:
-        print(f"  No local users file — checking Gist backup...")
-        gist_data = _restore_from_gist()
-        if gist_data:
-            save_users(gist_data)
-            print(f"  Restored {len(gist_data.get('users',{}))} user(s) from Gist!")
-        else:
-            save_users({"users":{}})
-            print(f"  No backup found — starting fresh")
+        print(f"  No user data found anywhere — starting fresh")
+        with open(USERS_FILE,"w",encoding="utf-8") as f:
+            json.dump({"users":{}},f)
+        _backup_to_gist({"users":{}})
 
     # ── POOL: load existing or seed fresh ──────────────────────────────────────
     if os.path.exists(POOL_FILE):
