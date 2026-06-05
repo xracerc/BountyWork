@@ -291,6 +291,114 @@
     .collect-btn.show{opacity:1;pointer-events:all;animation:fadein .4s .2s ease both;}
     .collect-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(74,158,255,.7);}
 
+    /* ════════════ TIME LEADERBOARD ════════════ */
+    #time-leaderboard{
+      position:relative;z-index:1;padding:4rem 1.5rem;
+      border-top:1px solid rgba(255,69,0,.15);
+      background:linear-gradient(180deg,transparent,rgba(255,69,0,.03) 30%,rgba(255,69,0,.03) 70%,transparent);
+    }
+    .lb-header{text-align:center;margin-bottom:2.5rem;}
+    .lb-title{
+      font-family:'Anton',sans-serif;font-size:clamp(1.8rem,4vw,3.5rem);
+      letter-spacing:.03em;color:white;
+      text-shadow:2px 2px 0 #3a0000,0 0 24px rgba(255,100,0,.6);
+    }
+    .lb-sub{color:var(--muted);font-size:.88rem;margin-top:.5rem;}
+
+    .lb-list{max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:.85rem;}
+
+    .lb-row{
+      display:flex;align-items:center;gap:1rem;
+      background:var(--bg2);border:1.5px solid rgba(255,255,255,.07);
+      border-radius:14px;padding:1rem 1.25rem;
+      transition:transform .2s;position:relative;overflow:hidden;
+    }
+    .lb-row:hover{transform:translateX(4px);}
+
+    /* #1 special */
+    .lb-row.top1{
+      border-color:rgba(255,69,0,.6);
+      background:linear-gradient(135deg,#1a0a00,#0a0500);
+      box-shadow:0 0 30px rgba(255,69,0,.15);
+    }
+
+    /* Flame animation for #1 avatar */
+    @keyframes flame-pulse{
+      0%,100%{box-shadow:0 0 8px #ff4500,0 0 16px #ff6b00,0 0 28px #ff8c00;}
+      50%{box-shadow:0 0 16px #ff0000,0 0 32px #ff4500,0 0 50px #ff6b00;}
+    }
+    @keyframes flame-flicker{
+      0%,100%{transform:scaleY(1) translateY(0);}
+      25%{transform:scaleY(1.05) translateY(-1px);}
+      75%{transform:scaleY(.96) translateY(1px);}
+    }
+    .flame-avatar{
+      position:relative;width:52px;height:52px;flex-shrink:0;
+    }
+    .flame-avatar .av-inner{
+      width:100%;height:100%;border-radius:50%;
+      background:linear-gradient(135deg,#ff4500,#ff8c00);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Anton',sans-serif;font-size:1.3rem;color:#000;
+      animation:flame-pulse 1.5s ease-in-out infinite;
+      position:relative;z-index:2;
+    }
+    .flame-avatar .flames{
+      position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+      display:flex;gap:2px;z-index:3;
+      animation:flame-flicker 0.8s ease-in-out infinite;
+    }
+    .flame-avatar .flames span{font-size:.9rem;line-height:1;}
+
+    .crown-wrap{
+      position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+      font-size:1.1rem;z-index:4;
+      animation:float 2s ease-in-out infinite;
+    }
+
+    .lb-rank{
+      font-family:'Anton',sans-serif;font-size:1.5rem;
+      width:36px;text-align:center;flex-shrink:0;
+    }
+    .top1 .lb-rank{color:#ff4500;text-shadow:0 0 12px rgba(255,69,0,.8);}
+    .lb-row:nth-child(2) .lb-rank{color:#9ca3af;}
+    .lb-row:nth-child(3) .lb-rank{color:#cd7f32;}
+
+    .lb-avatar{
+      width:44px;height:44px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,#4a9eff,#1a6aff);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Anton',sans-serif;font-size:1.1rem;color:#000;
+    }
+
+    .lb-info{flex:1;min-width:0;}
+    .lb-name{font-weight:800;font-size:.95rem;color:white;}
+    .lb-time{font-size:.75rem;color:var(--muted);margin-top:.1rem;}
+    .top1 .lb-name{color:#ff6b00;}
+    .top1 .lb-time{color:rgba(255,107,0,.7);}
+
+    .lb-right{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;}
+    .lb-cards{font-size:.72rem;color:var(--muted);}
+    .boost-badge{
+      font-size:.62rem;font-weight:900;
+      background:linear-gradient(135deg,#ff4500,#ff8c00);
+      color:#000;padding:2px 8px;border-radius:999px;
+      letter-spacing:.06em;white-space:nowrap;
+    }
+    .lb-empty{text-align:center;color:var(--muted);padding:2rem;font-size:.88rem;}
+
+    /* 2x boost notification on pull screen */
+    #boost-banner{
+      display:none;
+      background:linear-gradient(135deg,rgba(255,69,0,.12),rgba(255,140,0,.08));
+      border:1.5px solid rgba(255,69,0,.4);
+      border-radius:12px;padding:.65rem 1.2rem;
+      font-size:.82rem;font-weight:700;color:#ff6b00;
+      text-align:center;animation:flame-pulse 2s ease-in-out infinite;
+      margin-bottom:1rem;
+    }
+    #boost-banner.show{display:block;}
+
     /* ════════════ FLEX WALL ════════════ */
     #flex-section{
       position:relative;z-index:1;padding:4rem 1.5rem;
@@ -884,6 +992,7 @@
     <button class="btn-pull btn-x10" id="btn10x" onclick="triggerPull(10)">💜 PULL x10</button>
   </div>
 
+  <div id="boost-banner">🔥 2x CARD BOOST ACTIVE — You are #1 on the Time Leaderboard!</div>
   <div class="pull-meta">
     <div class="pull-counter">🎯 Rolls: <span id="pullsLeft">–</span> / 20,000 &nbsp;·&nbsp; Cards pulled: <span id="totalPulls">0</span></div>
     <div class="cooldown-text" id="cooldownText" style="display:none;"></div>
@@ -893,6 +1002,18 @@
       <div class="pt-dot"></div>
       <span id="poolStatus">26 new cards drop every 40 min</span>
     </div>
+  </div>
+</section>
+
+<!-- ═══ TIME LEADERBOARD ═══ -->
+<section id="time-leaderboard">
+  <div class="lb-header">
+    <div class="section-tag">Hall of Fame</div>
+    <div class="lb-title">🔥 TIME LEADERBOARD</div>
+    <p class="lb-sub">Longest time on Bountywork · #1 gets 2x card farming speed + flame crown</p>
+  </div>
+  <div class="lb-list" id="lbList">
+    <div class="lb-empty">Loading...</div>
   </div>
 </section>
 
@@ -1100,10 +1221,12 @@ function loginUser(data) {
   closeAuthModal();
   dismissWelcome();
   startCreditTimer();
+  startHeartbeat();
 }
 
 function logout() {
   stopCreditTimer();
+  stopHeartbeat();
   currentUser = null;
   collection  = [];
   rollCredits = 0;
@@ -1232,7 +1355,8 @@ async function claimCredits() {
       // Small toast for credits
       const el = document.createElement('div');
       el.style.cssText='position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:rgba(74,158,255,.9);color:white;font-weight:800;padding:.5rem 1.2rem;border-radius:999px;font-size:.8rem;z-index:800;animation:fadein .3s ease both;';
-      el.textContent=`+${d.added} rolls! You now have ${d.rollCredits.toLocaleString()} 🎯`;
+      const boostTxt = d.boost===2 ? ' (2x BOOST 🔥)' : '';
+      el.textContent=`+${d.added} rolls${boostTxt}! You now have ${d.rollCredits.toLocaleString()} 🎯`;
       document.body.appendChild(el);
       setTimeout(()=>el.remove(),3000);
     }
@@ -1748,6 +1872,108 @@ function clearAttachment(){
 }
 
 /* ═══════════════════════════════════════════════
+   TIME LEADERBOARD + HEARTBEAT
+═══════════════════════════════════════════════ */
+let heartbeatTimer = null;
+let myTotalMinutes = 0;
+let isTopUser = false;
+
+function startHeartbeat() {
+  stopHeartbeat();
+  if (!currentUser) return;
+  // Send immediately then every 60 seconds while tab is visible
+  sendHeartbeat();
+  heartbeatTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') sendHeartbeat();
+  }, 60000);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+}
+
+async function sendHeartbeat() {
+  if (!currentUser) return;
+  try {
+    const r = await fetch(`${API}/api/heartbeat`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-Username':currentUser.username},
+      body: JSON.stringify({username: currentUser.username})
+    });
+    if (r.ok) {
+      const d = await r.json();
+      myTotalMinutes = d.totalMinutes || 0;
+      isTopUser = d.isTopUser || false;
+      updateBoostBanner();
+      // Refresh leaderboard every 5 heartbeats
+      if (myTotalMinutes % 5 === 0) loadLeaderboard();
+    }
+  } catch(e) {}
+}
+
+function updateBoostBanner() {
+  const banner = document.getElementById('boost-banner');
+  if (banner) banner.classList.toggle('show', isTopUser);
+}
+
+async function loadLeaderboard() {
+  try {
+    const r = await fetch(`${API}/api/leaderboard`);
+    if (!r.ok) return;
+    const board = await r.json();
+    renderLeaderboard(board);
+  } catch(e) {}
+}
+
+function fmtTime(mins) {
+  const h = Math.floor(mins / 60), m = mins % 60;
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
+}
+
+function renderLeaderboard(board) {
+  const list = document.getElementById('lbList');
+  if (!board.length) {
+    list.innerHTML = '<div class="lb-empty">No one on the leaderboard yet — start playing to earn your spot! 🔥</div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  board.forEach((u, i) => {
+    const rank = i + 1;
+    const isFirst = rank === 1;
+    const row = document.createElement('div');
+    row.className = `lb-row${isFirst ? ' top1' : ''}`;
+
+    const initial = u.username.charAt(0).toUpperCase();
+    const avatarHTML = isFirst ? `
+      <div class="flame-avatar">
+        <div class="crown-wrap">👑</div>
+        <div class="flames"><span>🔥</span><span>🔥</span><span>🔥</span></div>
+        <div class="av-inner">${initial}</div>
+      </div>` :
+      `<div class="lb-avatar" style="background:${rank===2?'linear-gradient(135deg,#9ca3af,#6b7280)':'linear-gradient(135deg,#cd7f32,#92400e)'}">${initial}</div>`;
+
+    const rankDisplay = isFirst ? '🔥' : (rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`);
+
+    row.innerHTML = `
+      ${avatarHTML}
+      <div class="lb-rank">${rankDisplay}</div>
+      <div class="lb-info">
+        <div class="lb-name">${esc(u.username)}${isFirst ? ' 👑' : ''}</div>
+        <div class="lb-time">⏱ ${fmtTime(u.totalMinutes)} on Bountywork</div>
+      </div>
+      <div class="lb-right">
+        <div class="lb-cards">🃏 ${u.cards.toLocaleString()} cards</div>
+        ${isFirst ? '<div class="boost-badge">🔥 2x BOOST</div>' : ''}
+      </div>
+    `;
+    frag.appendChild(row);
+  });
+  list.innerHTML = '';
+  list.appendChild(frag);
+}
+
+/* ═══════════════════════════════════════════════
    WELCOME BANNER
 ═══════════════════════════════════════════════ */
 function initWelcomeBanner() {
@@ -2008,12 +2234,13 @@ async function loadPool() {
 renderCollection();
 updateLockerBadge();
 loadFlexWall();
+loadLeaderboard();
 loadPool();
 updatePullsUI();
 initWelcomeBanner();
 loadChat(true);
 setInterval(()=>loadChat(false), 5000);
-setInterval(()=>{loadFlexWall();loadPool();},60000);
+setInterval(()=>{loadFlexWall();loadPool();loadLeaderboard();},60000);
 
 // Refresh flex wall and pool every 60 seconds
 setInterval(() => { loadFlexWall(); loadPool(); }, 60000);
@@ -2024,6 +2251,7 @@ if (currentUser) {
   rollCredits = currentUser.rollCredits || 0;
   updatePullsUI();
   startCreditTimer();
+  startHeartbeat();
   // Refresh from server
   fetch(`${API}/api/users/${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).then(d=>{
     if (d.rollCredits !== undefined) {

@@ -31,6 +31,8 @@ CREDIT_INTERVAL  = 15 * 60
 CREDITS_PER_TICK = 15
 MAX_ROLLS        = 20_000
 MAX_LOCKER       = 100_000
+GIST_BACKUP_INTERVAL = 5 * 60   # backup to Gist every 5 min (not every heartbeat)
+_last_gist_backup    = [0]       # track last Gist backup time
 
 # ── Card drop cycle (every 40 min) ───────────────────────────────────────────
 CYCLE_SEC   = 40 * 60
@@ -234,13 +236,15 @@ def load_users():
     with open(USERS_FILE,"r",encoding="utf-8") as f:
         return json.load(f)
 
-def save_users(d):
-    """Save users locally AND synchronously back up to Gist. Never loses data."""
+def save_users(d, force_gist=True):
+    """Save users locally. Backs up to Gist immediately for critical ops, throttled otherwise."""
     with open(USERS_FILE,"w",encoding="utf-8") as f:
         json.dump(d,f,indent=2,ensure_ascii=False)
-    # Synchronous Gist backup — waits for confirmation before returning
     if GIST_TOKEN and GIST_ID:
-        _backup_to_gist(d)
+        now = time.time()
+        if force_gist or (now - _last_gist_backup[0]) >= GIST_BACKUP_INTERVAL:
+            if _backup_to_gist(d):
+                _last_gist_backup[0] = now
 
 def _backup_to_gist(data):
     """Synchronously write users data to GitHub Gist."""
@@ -314,6 +318,17 @@ def load_chat():
 def save_chat(d):
     with open(CHAT_FILE,"w",encoding="utf-8") as f:
         json.dump(d,f,indent=2,ensure_ascii=False)
+
+def get_top_user():
+    """Return username of #1 on the time leaderboard, or None."""
+    try:
+        d = load_users()
+        users = list(d["users"].values())
+        if not users: return None
+        top = max(users, key=lambda u: u.get("totalMinutes", 0))
+        return top["username"] if top.get("totalMinutes", 0) > 0 else None
+    except:
+        return None
 
 def post_system_message(text, card=None, msg_type="system"):
     with _lock:
@@ -478,6 +493,23 @@ class Handler(BaseHTTPRequestHandler):
         elif p == "/api/pool":
             self.json_resp(200, load_pool())
 
+        # ── GET /api/leaderboard ───────────────────────────────
+        elif p == "/api/leaderboard":
+            d = load_users()
+            board = []
+            for u in d["users"].values():
+                mins = u.get("totalMinutes", 0)
+                board.append({
+                    "username": u["username"],
+                    "totalMinutes": mins,
+                    "hours": mins // 60,
+                    "minutes": mins % 60,
+                    "cards": len(u.get("collection", [])),
+                    "legendaries": sum(1 for c in u.get("collection",[]) if c.get("rarity")=="LEGENDARY"),
+                })
+            board.sort(key=lambda x: (-x["totalMinutes"], -x["cards"]))
+            self.json_resp(200, board[:20])
+
         # ── GET /api/users ─────────────────────────────────────
         elif p == "/api/users":
             d = load_users()
@@ -563,6 +595,7 @@ class Handler(BaseHTTPRequestHandler):
                     "collection": [],
                     "rollCredits": STARTING_ROLLS,
                     "lastCreditClaim": 0,
+                    "totalMinutes": 0,
                     "joinedAt": datetime.now(timezone.utc).isoformat(),
                 }
                 save_users(d)
@@ -587,6 +620,26 @@ class Handler(BaseHTTPRequestHandler):
                 "rollCredits": user.get("rollCredits", STARTING_ROLLS),
             })
 
+        # ── POST /api/heartbeat (track active time, 1 min = 1 ping) ──
+        elif p == "/api/heartbeat":
+            uname = self.headers.get("X-Username","").strip() or self.body().get("username","").strip()
+            if not uname:
+                self.json_resp(401,{"error":"Not logged in"}); return
+            with _lock:
+                d    = load_users()
+                user = d["users"].get(uname)
+                if not user:
+                    self.json_resp(404,{"error":"User not found"}); return
+                user["totalMinutes"] = user.get("totalMinutes", 0) + 1
+                save_users(d, force_gist=False)  # throttled backup — not every minute
+            top = get_top_user()
+            self.json_resp(200,{
+                "ok": True,
+                "totalMinutes": user["totalMinutes"],
+                "isTopUser": top == uname,
+                "topUser": top,
+            })
+
         # ── POST /api/credits (earn +15 rolls every 15 min) ────
         elif p == "/api/credits":
             uname = self.headers.get("X-Username","").strip() or self.body().get("username","").strip()
@@ -604,11 +657,15 @@ class Handler(BaseHTTPRequestHandler):
                     self.json_resp(429,{"error":"Too soon","waitSec":wait,
                                         "rollCredits":user.get("rollCredits",0)}); return
                 cur  = user.get("rollCredits", 0)
-                new  = min(MAX_ROLLS, cur + CREDITS_PER_TICK)
+                # 2x boost for #1 on time leaderboard
+                top_user   = get_top_user()
+                multiplier = 2 if (top_user == uname) else 1
+                added = min(MAX_ROLLS - cur, CREDITS_PER_TICK * multiplier)
+                new   = cur + added
                 user["rollCredits"]     = new
                 user["lastCreditClaim"] = now
                 save_users(d)
-            self.json_resp(200,{"ok":True,"rollCredits":new,"added":new-cur})
+            self.json_resp(200,{"ok":True,"rollCredits":new,"added":added,"boost":multiplier})
 
         # ── POST /api/pull ──────────────────────────────────────
         elif p == "/api/pull":
