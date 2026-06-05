@@ -400,6 +400,181 @@
     footer .flinks a{color:var(--muted);text-decoration:none;font-size:.75rem;font-weight:600;transition:color .2s;}
     footer .flinks a:hover{color:white;}
 
+    /* ════════════ LEGENDARY BLAST ════════════ */
+    #leg-blast{position:fixed;inset:0;z-index:600;pointer-events:none;display:none;overflow:hidden;}
+    #leg-blast.active{display:block;}
+    .leg-rays{position:absolute;top:50%;left:50%;width:250vmax;height:250vmax;transform:translate(-50%,-50%);
+      background:conic-gradient(rgba(245,197,66,.35) 0deg,transparent 18deg,rgba(255,200,0,.25) 36deg,transparent 54deg,rgba(245,197,66,.35) 72deg,transparent 90deg,rgba(255,180,0,.3) 108deg,transparent 126deg,rgba(245,197,66,.35) 144deg,transparent 162deg,rgba(255,200,0,.25) 180deg,transparent 198deg,rgba(245,197,66,.35) 216deg,transparent 234deg,rgba(255,180,0,.3) 252deg,transparent 270deg,rgba(245,197,66,.35) 288deg,transparent 306deg,rgba(255,200,0,.25) 324deg,transparent 342deg,rgba(245,197,66,.35) 360deg);
+      animation:rayspin 1.8s linear infinite;}
+    @keyframes rayspin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+    .leg-glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(245,197,66,.18) 0%,transparent 65%);animation:legglowpulse 1s ease-in-out infinite;}
+    @keyframes legglowpulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+    .leg-announce{position:absolute;top:12%;left:50%;transform:translateX(-50%) scale(0);
+      font-family:'Anton',sans-serif;font-size:clamp(2rem,6vw,4.5rem);color:#f5c542;
+      letter-spacing:.08em;white-space:nowrap;
+      text-shadow:0 0 40px rgba(245,197,66,1),4px 4px 0 #5a3800,0 0 80px rgba(255,200,0,.8);
+      animation:none;}
+    .leg-announce.pop{animation:legpop .6s cubic-bezier(.34,1.56,.64,1) both;}
+    @keyframes legpop{from{transform:translateX(-50%) scale(0);opacity:0;}to{transform:translateX(-50%) scale(1);opacity:1;}}
+    #leg-canvas{position:fixed;inset:0;z-index:599;pointer-events:none;display:none;}
+    @keyframes bodyshake{0%,100%{transform:translateX(0);}10%{transform:translateX(-8px);}20%{transform:translateX(8px);}30%{transform:translateX(-6px);}40%{transform:translateX(6px);}50%{transform:translateX(-4px);}60%{transform:translateX(4px);}70%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
+    body.shaking{animation:bodyshake .5s ease;}
+
+    /* Legendary chat alert toast */
+    #leg-toast{
+      position:fixed;top:5rem;left:50%;transform:translateX(-50%) translateY(-80px);
+      z-index:700;background:linear-gradient(135deg,#1a1000,#2a1a00);
+      border:2px solid rgba(245,197,66,.7);border-radius:14px;
+      padding:.75rem 1.5rem;display:flex;align-items:center;gap:.75rem;
+      box-shadow:0 0 30px rgba(245,197,66,.4);
+      transition:transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
+      max-width:90vw;
+    }
+    #leg-toast.show{transform:translateX(-50%) translateY(0);}
+    #leg-toast .lt-icon{font-size:1.4rem;}
+    #leg-toast .lt-text{font-size:.85rem;font-weight:700;color:var(--gold);}
+
+    /* ════════════ CHAT ════════════ */
+    #chat-section{position:relative;z-index:1;padding:4rem 1.5rem;
+      border-top:1px solid rgba(74,158,255,.1);}
+    .chat-wrap{max-width:800px;margin:0 auto;}
+    .chat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;}
+    .chat-title{font-family:'Anton',sans-serif;font-size:clamp(1.4rem,3vw,2rem);color:white;
+      text-shadow:2px 2px 0 #001030,0 0 18px rgba(74,158,255,.4);letter-spacing:.04em;}
+    .chat-online{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.4rem;}
+    .chat-online .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:blink 1.8s infinite;}
+
+    #chat-messages{
+      height:420px;overflow-y:auto;
+      background:var(--bg2);border:1.5px solid rgba(74,158,255,.15);border-radius:14px;
+      padding:1rem;display:flex;flex-direction:column;gap:.75rem;margin-bottom:.75rem;
+      scroll-behavior:smooth;
+    }
+    #chat-messages::-webkit-scrollbar{width:4px;}
+    #chat-messages::-webkit-scrollbar-track{background:transparent;}
+    #chat-messages::-webkit-scrollbar-thumb{background:rgba(74,158,255,.3);border-radius:2px;}
+
+    .chat-msg{display:flex;gap:.6rem;align-items:flex-start;}
+    .chat-msg.sys-leg{
+      background:linear-gradient(90deg,rgba(245,197,66,.08),transparent);
+      border:1px solid rgba(245,197,66,.2);border-radius:10px;padding:.5rem .75rem;
+      animation:legmsgpop .5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes legmsgpop{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+    .cm-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Anton',sans-serif;font-size:.8rem;font-weight:900;color:#000;}
+    .cm-body{flex:1;min-width:0;}
+    .cm-header{display:flex;align-items:baseline;gap:.5rem;margin-bottom:.2rem;flex-wrap:wrap;}
+    .cm-user{font-size:.8rem;font-weight:800;color:white;}
+    .cm-time{font-size:.65rem;color:var(--muted);}
+    .cm-text{font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.5;word-break:break-word;}
+    .cm-gif{max-width:220px;border-radius:8px;margin-top:.4rem;display:block;}
+    .cm-card-flex{
+      margin-top:.5rem;background:var(--bg3);border:1px solid rgba(255,255,255,.08);
+      border-radius:10px;padding:.5rem .75rem;display:flex;align-items:center;gap:.6rem;
+      max-width:260px;
+    }
+    .cm-card-emoji{font-size:1.5rem;}
+    .cm-card-info .cn{font-size:.75rem;font-weight:800;color:white;}
+    .cm-card-info .cr{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+    .cm-actions{display:flex;align-items:center;gap:.5rem;margin-top:.35rem;}
+    .cm-upvote{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);
+      border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700;color:var(--muted);
+      cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.3rem;}
+    .cm-upvote:hover{border-color:var(--blue);color:var(--blue);}
+    .cm-upvote.voted{border-color:var(--blue);color:var(--blue);background:rgba(74,158,255,.1);}
+
+    .chat-input-area{display:flex;flex-direction:column;gap:.5rem;}
+    .chat-input-row{display:flex;gap:.5rem;}
+    #chatInput{
+      flex:1;background:var(--bg3);border:1.5px solid rgba(74,158,255,.2);border-radius:10px;
+      padding:.6rem 1rem;color:white;font-size:.88rem;font-family:inherit;outline:none;
+      transition:border-color .2s;
+    }
+    #chatInput:focus{border-color:var(--blue);}
+    .chat-action-btns{display:flex;gap:.4rem;}
+    .btn-chat-action{
+      background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);
+      border-radius:8px;padding:.55rem .9rem;color:var(--muted);font-size:.78rem;
+      font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;
+    }
+    .btn-chat-action:hover{border-color:var(--blue);color:var(--blue);}
+    .btn-chat-send{
+      background:linear-gradient(135deg,var(--blue),#1a6aff);color:white;
+      border:none;border-radius:8px;padding:.55rem 1.2rem;font-weight:800;
+      font-size:.82rem;cursor:pointer;transition:opacity .2s;
+    }
+    .btn-chat-send:hover{opacity:.85;}
+    .chat-attach-preview{
+      display:none;align-items:center;gap:.5rem;
+      background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);
+      border-radius:8px;padding:.4rem .75rem;font-size:.75rem;color:var(--blue);
+    }
+    .chat-attach-preview.show{display:flex;}
+    .cap-remove{cursor:pointer;margin-left:auto;color:var(--muted);font-size:.9rem;transition:color .15s;}
+    .cap-remove:hover{color:white;}
+    .chat-login-wall{
+      text-align:center;padding:2rem;color:var(--muted);font-size:.9rem;
+    }
+
+    /* GIF picker */
+    #gif-picker{
+      position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+      z-index:500;background:var(--bg2);border:1.5px solid rgba(74,158,255,.25);
+      border-radius:18px 18px 0 0;padding:1rem;width:min(500px,96vw);
+      transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    #gif-picker.open{transform:translateX(-50%) translateY(0);}
+    .gp-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;}
+    #gifSearch{flex:1;background:var(--bg3);border:1.5px solid rgba(74,158,255,.2);border-radius:8px;padding:.5rem .75rem;color:white;font-family:inherit;font-size:.88rem;outline:none;}
+    #gifSearch:focus{border-color:var(--blue);}
+    .gp-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;}
+    #gif-results{display:flex;flex-wrap:wrap;gap:.4rem;max-height:260px;overflow-y:auto;}
+    .gif-thumb{width:calc(25% - .3rem);border-radius:6px;cursor:pointer;object-fit:cover;aspect-ratio:1;transition:transform .15s;}
+    .gif-thumb:hover{transform:scale(1.04);}
+
+    /* Card flex picker */
+    #flex-picker{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-60%) scale(.95);
+      z-index:500;background:var(--bg2);border:1.5px solid rgba(74,158,255,.25);
+      border-radius:18px;padding:1.25rem;width:min(600px,94vw);max-height:80vh;overflow-y:auto;
+      opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    #flex-picker.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all;}
+    .fp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+    .fp-title{font-family:'Anton',sans-serif;font-size:1.1rem;color:white;}
+    .fp-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;}
+    #flex-card-grid{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;}
+
+    /* ════════════ LOCKER ════════════ */
+    #locker-section{position:relative;z-index:1;padding:4rem 1.5rem 6rem;border-top:1px solid rgba(74,158,255,.1);}
+    .locker-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;max-width:1100px;margin:0 auto 2rem;}
+    .locker-title-wrap{display:flex;align-items:center;gap:.75rem;}
+    .locker-icon{font-size:1.6rem;cursor:pointer;transition:transform .3s;filter:drop-shadow(0 0 8px rgba(245,197,66,.4));}
+    .locker-icon.unlocked{animation:lockerunlock .5s cubic-bezier(.34,1.56,.64,1) both;}
+    @keyframes lockerunlock{0%{transform:rotate(0);}30%{transform:rotate(-15deg);}60%{transform:rotate(10deg);}100%{transform:rotate(0) scale(1.1);}}
+    .locker-title{font-family:'Anton',sans-serif;font-size:clamp(1.4rem,3.5vw,2.2rem);color:white;text-shadow:2px 2px 0 #001030,0 0 18px rgba(74,158,255,.4);}
+    .locker-badge{background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.25);border-radius:999px;padding:.3rem .9rem;font-size:.75rem;font-weight:700;color:var(--blue);}
+    .btn-locker-toggle{
+      background:linear-gradient(135deg,var(--gold),#ff7b00);color:#000;
+      font-family:'Anton',sans-serif;font-size:.9rem;letter-spacing:.06em;
+      padding:.55rem 1.4rem;border-radius:10px;border:none;cursor:pointer;
+      transition:transform .15s,box-shadow .2s;
+      box-shadow:0 4px 18px rgba(245,197,66,.35);
+    }
+    .btn-locker-toggle:hover{transform:translateY(-2px);box-shadow:0 6px 26px rgba(245,197,66,.5);}
+
+    #locker-content{
+      max-width:1100px;margin:0 auto;
+      opacity:0;transform:translateY(16px);
+      transition:opacity .4s,transform .4s;
+      pointer-events:none;height:0;overflow:hidden;
+    }
+    #locker-content.open{opacity:1;transform:translateY(0);pointer-events:all;height:auto;overflow:visible;}
+
+    .locker-rarity-tabs{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:1.75rem;}
+
     /* ════════════ TRASH / DISCARD ════════════ */
     .trash-btn{
       position:absolute;bottom:7px;right:7px;z-index:30;
@@ -445,7 +620,39 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
+<canvas id="leg-canvas"></canvas>
 <div id="rarity-flash"></div>
+
+<!-- ═══ LEGENDARY BLAST ═══ -->
+<div id="leg-blast">
+  <div class="leg-rays"></div>
+  <div class="leg-glow"></div>
+  <div class="leg-announce" id="legAnnounce">👑 LEGENDARY 👑</div>
+</div>
+
+<!-- ═══ LEGENDARY TOAST ═══ -->
+<div id="leg-toast">
+  <div class="lt-icon">👑</div>
+  <div class="lt-text" id="legToastText">Someone pulled a LEGENDARY!</div>
+</div>
+
+<!-- ═══ GIF PICKER ═══ -->
+<div id="gif-picker">
+  <div class="gp-head">
+    <input id="gifSearch" placeholder="Search GIFs..." oninput="searchGifs(this.value)"/>
+    <button class="gp-close" onclick="closeGifPicker()">✕</button>
+  </div>
+  <div id="gif-results"></div>
+</div>
+
+<!-- ═══ CARD FLEX PICKER ═══ -->
+<div id="flex-picker">
+  <div class="fp-head">
+    <div class="fp-title">Flex a Card</div>
+    <button class="fp-close" onclick="closeFlexPicker()">✕</button>
+  </div>
+  <div id="flex-card-grid"></div>
+</div>
 
 <!-- ═══ AUTH MODAL ═══ -->
 <div class="modal-overlay" id="authModal">
@@ -527,7 +734,7 @@
   </div>
 
   <div class="rates-row">
-    <div class="rate-chip" style="color:#f5c542;border-color:rgba(245,197,66,.35);background:rgba(245,197,66,.06);"><div class="rc-dot" style="background:#f5c542;box-shadow:0 0 5px #f5c542;"></div>Legendary 5%</div>
+    <div class="rate-chip" style="color:#f5c542;border-color:rgba(245,197,66,.35);background:rgba(245,197,66,.06);"><div class="rc-dot" style="background:#f5c542;box-shadow:0 0 5px #f5c542;"></div>Legendary 0.2%</div>
     <div class="rate-chip" style="color:#c084fc;border-color:rgba(192,132,252,.35);background:rgba(192,132,252,.06);"><div class="rc-dot" style="background:#c084fc;box-shadow:0 0 5px #c084fc;"></div>Epic 25%</div>
     <div class="rate-chip" style="color:#60a5fa;border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.06);"><div class="rc-dot" style="background:#60a5fa;box-shadow:0 0 5px #60a5fa;"></div>Rare 45%</div>
     <div class="rate-chip" style="color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.06);"><div class="rc-dot" style="background:#4ade80;box-shadow:0 0 5px #4ade80;"></div>Uncommon 20%</div>
@@ -569,34 +776,66 @@
   </div>
 </section>
 
-<!-- ═══ MY COLLECTION ═══ -->
-<section id="collection-section">
-  <div class="coll-header">
-    <div style="display:flex;align-items:center;gap:.65rem;">
-      <div class="coll-title">MY COLLECTION</div>
-      <div class="coll-badge" id="collBadge">0 cards</div>
+<!-- ═══ CHAT ═══ -->
+<section id="chat-section">
+  <div class="chat-wrap">
+    <div class="chat-head">
+      <div class="chat-title">💬 HUNTER CHAT</div>
+      <div class="chat-online"><div class="dot"></div><span id="chatOnlineCount">0</span> online</div>
+    </div>
+    <div id="chat-messages">
+      <div style="text-align:center;color:var(--muted);font-size:.82rem;padding:2rem;">Loading chat...</div>
+    </div>
+    <div class="chat-input-area">
+      <div class="chat-attach-preview" id="chatAttachPreview">
+        <span id="attachLabel">Attached</span>
+        <span class="cap-remove" onclick="clearAttachment()">✕</span>
+      </div>
+      <div class="chat-input-row">
+        <input id="chatInput" placeholder="Chat with hunters... (sign in to chat)" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+        <div class="chat-action-btns">
+          <button class="btn-chat-action" onclick="openGifPicker()" title="Send GIF">GIF</button>
+          <button class="btn-chat-action" onclick="openFlexPicker()" title="Flex a card">🎴 Flex</button>
+          <button class="btn-chat-send" onclick="sendChatMsg()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LOCKER ═══ -->
+<section id="locker-section">
+  <div class="locker-header">
+    <div class="locker-title-wrap">
+      <div class="locker-icon" id="lockerIcon" onclick="toggleLocker()">🔒</div>
+      <div class="locker-title">MY LOCKER</div>
+      <div class="locker-badge" id="lockerBadge">0 cards</div>
     </div>
     <div style="display:flex;gap:.5rem;align-items:center;">
+      <button class="btn-locker-toggle" onclick="toggleLocker()" id="lockerToggleBtn">Open Locker</button>
       <button class="select-toggle" id="selectToggle" onclick="toggleSelectMode()">☑ Select</button>
       <button class="coll-clear" onclick="clearCollection()">Clear All</button>
     </div>
   </div>
 
-  <!-- Bulk delete bar (shown in select mode) -->
+  <!-- Bulk delete bar -->
   <div id="bulk-bar">
     <div class="bulk-info"><span id="selectedCount">0</span> card(s) selected</div>
     <button class="btn-select-all" onclick="selectAllCards()">Select All</button>
     <button class="btn-bulk-delete" id="bulkDeleteBtn" onclick="bulkDiscard()" disabled>🗑️ Delete Selected</button>
   </div>
-  <div class="coll-filters">
-    <button class="cfilt active" data-cf="all" style="color:#aaa;border-color:rgba(170,170,170,.35);">All</button>
-    <button class="cfilt" data-cf="LEGENDARY" style="color:#f5c542;border-color:rgba(245,197,66,.4);">👑 Legendary</button>
-    <button class="cfilt" data-cf="EPIC" style="color:#c084fc;border-color:rgba(192,132,252,.4);">💜 Epic</button>
-    <button class="cfilt" data-cf="RARE" style="color:#60a5fa;border-color:rgba(96,165,250,.4);">💙 Rare</button>
-    <button class="cfilt" data-cf="UNCOMMON" style="color:#4ade80;border-color:rgba(74,222,128,.4);">💚 Uncommon</button>
-    <button class="cfilt" data-cf="COMMON" style="color:#9ca3af;border-color:rgba(156,163,175,.3);">⚪ Common</button>
+
+  <div id="locker-content">
+    <div class="locker-rarity-tabs">
+      <button class="cfilt active" data-cf="all" style="color:#aaa;border-color:rgba(170,170,170,.35);">All</button>
+      <button class="cfilt" data-cf="LEGENDARY" style="color:#f5c542;border-color:rgba(245,197,66,.4);">👑 Legendary</button>
+      <button class="cfilt" data-cf="EPIC" style="color:#c084fc;border-color:rgba(192,132,252,.4);">💜 Epic</button>
+      <button class="cfilt" data-cf="RARE" style="color:#60a5fa;border-color:rgba(96,165,250,.4);">💙 Rare</button>
+      <button class="cfilt" data-cf="UNCOMMON" style="color:#4ade80;border-color:rgba(74,222,128,.4);">💚 Uncommon</button>
+      <button class="cfilt" data-cf="COMMON" style="color:#9ca3af;border-color:rgba(156,163,175,.3);">⚪ Common</button>
+    </div>
+    <div id="coll-grid"><div class="empty-coll"><div>🎯</div><div style="margin-top:.4rem;">Pull cards to start your collection!</div></div></div>
   </div>
-  <div id="coll-grid"><div class="empty-coll"><div>🎯</div><div style="margin-top:.4rem;">Pull cards to start your collection!</div></div></div>
 </section>
 
 <footer>
@@ -613,7 +852,9 @@
 /* ═══════════════════════════════════════════════
    CONFIG
 ═══════════════════════════════════════════════ */
-const API = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1' ? '' : '';
+const API = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'
+  ? ''
+  : 'https://bountywork.onrender.com';
 const RC = {LEGENDARY:'#f5c542',EPIC:'#c084fc',RARE:'#60a5fa',UNCOMMON:'#4ade80',COMMON:'#9ca3af'};
 const FLASH_C = {LEGENDARY:'rgba(245,197,66,.5)',EPIC:'rgba(192,132,252,.4)',RARE:'rgba(96,165,250,.35)',UNCOMMON:'rgba(74,222,128,.25)',COMMON:'rgba(100,100,120,.15)'};
 const ORDER = {LEGENDARY:0,EPIC:1,RARE:2,UNCOMMON:3,COMMON:4};
@@ -820,6 +1061,7 @@ function showSingleReveal(card) {
   flash.style.animation='none'; void flash.offsetWidth;
   flash.style.animation='rflash 1s ease both';
   ov.classList.add('active');
+  if (card.rarity==='LEGENDARY') setTimeout(()=>launchLegendaryEffect(), 200);
 
   const color = RC[card.rarity]||'#fff';
   ann.style.color = color;
@@ -850,6 +1092,7 @@ function showMultiReveal(cards) {
   flash.style.animation='none'; void flash.offsetWidth;
   flash.style.animation='rflash 1s ease both';
   ov.classList.add('active');
+  if (sorted[0].rarity==='LEGENDARY') setTimeout(()=>launchLegendaryEffect(), 200);
 
   sorted.forEach((card,i) => {
     const w = document.createElement('div');
@@ -867,11 +1110,12 @@ function closeReveal() {
   localStorage.setItem('bw_collection', JSON.stringify(collection));
   pendingCards=[];
   renderCollection();
+  updateLockerBadge();
   updatePullsUI();
   loadFlexWall();
   setBtnsDisabled(false);
   pulling = false;
-  setTimeout(() => document.getElementById('collection-section').scrollIntoView({behavior:'smooth'}), 200);
+  // No auto-scroll — let user keep pulling
 }
 
 /* ═══════════════════════════════════════════════
@@ -951,7 +1195,7 @@ function attachTilt(scene) {
 ═══════════════════════════════════════════════ */
 function renderCollection() {
   const grid = document.getElementById('coll-grid');
-  const badge= document.getElementById('collBadge');
+  const badge= document.getElementById('lockerBadge');
   const filt = collFilter==='all' ? collection : collection.filter(c=>c.rarity===collFilter);
   badge.textContent = `${collection.length} card${collection.length!==1?'s':''}`;
   if (!filt.length) {
@@ -983,6 +1227,258 @@ document.querySelectorAll('.cfilt').forEach(btn=>{
     collFilter=btn.dataset.cf; renderCollection();
   });
 });
+
+/* ═══════════════════════════════════════════════
+   LEGENDARY EFFECT
+═══════════════════════════════════════════════ */
+function playDing(legendary=false) {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const freqs = legendary ? [523,659,784,1047] : [880];
+    freqs.forEach((f,i) => {
+      const osc=ctx.createOscillator(), gain=ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value=f; osc.type='sine';
+      const t=ctx.currentTime+i*0.12;
+      gain.gain.setValueAtTime(0,t);
+      gain.gain.linearRampToValueAtTime(legendary?.4:.25,t+.04);
+      gain.gain.exponentialRampToValueAtTime(.001,t+.9);
+      osc.start(t); osc.stop(t+.9);
+    });
+  } catch(e){}
+}
+
+function launchLegendaryEffect() {
+  playDing(true);
+  document.body.classList.add('shaking');
+  setTimeout(()=>document.body.classList.remove('shaking'),500);
+  const blast=document.getElementById('leg-blast');
+  const ann=document.getElementById('legAnnounce');
+  blast.classList.add('active');
+  ann.classList.remove('pop'); void ann.offsetWidth; ann.classList.add('pop');
+  // Confetti
+  const canvas=document.getElementById('leg-canvas');
+  canvas.style.display='block';
+  canvas.width=innerWidth; canvas.height=innerHeight;
+  const ctx=canvas.getContext('2d');
+  const parts=Array.from({length:180},()=>({
+    x:Math.random()*innerWidth, y:-20+Math.random()*-100,
+    vx:(Math.random()-.5)*9, vy:Math.random()*6+2,
+    color:['#f5c542','#ffd700','#ffb347','#fff','#ff7b00','#ffe066'][Math.floor(Math.random()*6)],
+    size:Math.random()*12+4, rot:Math.random()*360, rv:(Math.random()-.5)*12,
+    shape:Math.random()>.5?'rect':'circle'
+  }));
+  let start=null;
+  (function frame(ts){
+    if(!start)start=ts;
+    const el=ts-start;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    parts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=.18; p.rot+=p.rv;
+      const alpha=Math.max(0,1-el/2800);
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color; ctx.globalAlpha=alpha;
+      if(p.shape==='rect') ctx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+      else{ctx.beginPath();ctx.arc(0,0,p.size/2,0,Math.PI*2);ctx.fill();}
+      ctx.restore();
+    });
+    if(el<3000) requestAnimationFrame(frame);
+    else{ctx.clearRect(0,0,canvas.width,canvas.height);canvas.style.display='none';}
+  })(0);
+  setTimeout(()=>{blast.classList.remove('active');ann.classList.remove('pop');},3200);
+}
+
+function showLegToast(text) {
+  playDing(false);
+  const t=document.getElementById('leg-toast');
+  document.getElementById('legToastText').textContent=text;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),4000);
+}
+
+/* ═══════════════════════════════════════════════
+   LOCKER
+═══════════════════════════════════════════════ */
+let lockerOpen = false;
+function toggleLocker() {
+  lockerOpen=!lockerOpen;
+  const content=document.getElementById('locker-content');
+  const icon=document.getElementById('lockerIcon');
+  const btn=document.getElementById('lockerToggleBtn');
+  content.classList.toggle('open',lockerOpen);
+  icon.textContent=lockerOpen?'🔓':'🔒';
+  icon.classList.toggle('unlocked',lockerOpen);
+  btn.textContent=lockerOpen?'Close Locker':'Open Locker';
+  if(lockerOpen) renderCollection();
+}
+function updateLockerBadge(){
+  document.getElementById('lockerBadge').textContent=`${collection.length} card${collection.length!==1?'s':''}`;
+}
+
+/* ═══════════════════════════════════════════════
+   CHAT
+═══════════════════════════════════════════════ */
+let chatMessages=[], lastChatTs='', chatPollTimer=null;
+let pendingGif='', pendingFlexCard=null;
+
+async function loadChat(initial=false) {
+  try {
+    const url=`${API}/api/chat${lastChatTs?`?since=${encodeURIComponent(lastChatTs)}`:''}`;
+    const r=await fetch(url);
+    if(!r.ok) return;
+    const d=await r.json();
+    const msgs=d.messages||[];
+    if(!msgs.length) { if(initial) renderChat([]); return; }
+    if(initial) chatMessages=msgs;
+    else chatMessages=[...chatMessages,...msgs].slice(-200);
+    if(msgs.length) lastChatTs=msgs[msgs.length-1].timestamp;
+    renderChat(msgs, !initial);
+    // Check for legendary alerts
+    msgs.filter(m=>m.type==='legendary_alert').forEach(m=>showLegToast(m.text));
+  } catch(e){ if(initial) renderChat([]); }
+}
+
+function renderChat(newMsgs, append=false) {
+  const box=document.getElementById('chat-messages');
+  const wasAtBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
+  if(!append) {
+    box.innerHTML='';
+    (chatMessages.length?chatMessages:[]).forEach(m=>box.appendChild(buildChatMsg(m)));
+  } else {
+    newMsgs.forEach(m=>box.appendChild(buildChatMsg(m)));
+  }
+  if(!box.children.length) box.innerHTML='<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:2rem;">No messages yet. Say hi! 👋</div>';
+  if(wasAtBottom||append) box.scrollTop=box.scrollHeight;
+}
+
+function buildChatMsg(m) {
+  const div=document.createElement('div');
+  div.className='chat-msg'+(m.type==='legendary_alert'?' sys-leg':'');
+  const color=m.type==='legendary_alert'?'#f5c542':(hashColor(m.username));
+  const initial=(m.username||'?').charAt(0).toUpperCase();
+  const timeStr=new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const voted=currentUser&&m.upvotedBy&&m.upvotedBy.includes(currentUser.username);
+  div.innerHTML=`
+    <div class="cm-avatar" style="background:${color};">${initial}</div>
+    <div class="cm-body">
+      <div class="cm-header">
+        <span class="cm-user" style="color:${color};">${esc(m.username)}</span>
+        <span class="cm-time">${timeStr}</span>
+      </div>
+      ${m.text?`<div class="cm-text">${esc(m.text)}</div>`:''}
+      ${m.gif?`<img class="cm-gif" src="${esc(m.gif)}" loading="lazy" alt="gif"/>`:''}
+      ${m.card?`<div class="cm-card-flex"><div class="cm-card-emoji">${m.card.emoji||'🎯'}</div><div class="cm-card-info"><div class="cn">${esc(m.card.bounty||'')}</div><div class="cr" style="color:${RC[m.card.rarity]||'#aaa'};">${m.card.rarity}</div></div></div>`:''}
+      <div class="cm-actions">
+        <button class="cm-upvote${voted?' voted':''}" onclick="upvoteMsg('${m.id}',this)">
+          👍 ${m.upvotes||0}
+        </button>
+      </div>
+    </div>`;
+  return div;
+}
+
+function hashColor(str) {
+  const colors=['#4a9eff','#c084fc','#60a5fa','#4ade80','#f59e0b','#f97316','#ec4899'];
+  let h=0; for(const c of (str||'')) h=(h*31+c.charCodeAt(0))&0xffffffff;
+  return colors[Math.abs(h)%colors.length];
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+async function sendChatMsg() {
+  if(!currentUser){openAuthModal('register');return;}
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text && !pendingGif && !pendingFlexCard) return;
+  const btn=document.querySelector('.btn-chat-send');
+  btn.disabled=true;
+  try {
+    const r=await fetch(`${API}/api/chat`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Username':currentUser.username},
+      body:JSON.stringify({text, gif:pendingGif, card:pendingFlexCard, username:currentUser.username})
+    });
+    if(r.ok){
+      input.value='';
+      clearAttachment();
+      await loadChat(false);
+    }
+  } catch(e){}
+  btn.disabled=false;
+}
+
+async function upvoteMsg(msgId, btn) {
+  if(!currentUser){openAuthModal('register');return;}
+  try {
+    const r=await fetch(`${API}/api/upvote`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Username':currentUser.username},
+      body:JSON.stringify({messageId:msgId,username:currentUser.username})
+    });
+    if(r.ok){
+      const d=await r.json();
+      btn.textContent=`👍 ${d.upvotes}`;
+      btn.classList.toggle('voted',d.voted);
+    }
+  } catch(e){}
+}
+
+// GIF picker using Giphy public API
+let gifDebounce=null;
+function openGifPicker(){document.getElementById('gif-picker').classList.add('open');document.getElementById('gifSearch').focus();}
+function closeGifPicker(){document.getElementById('gif-picker').classList.remove('open');}
+function searchGifs(q){
+  clearTimeout(gifDebounce);
+  gifDebounce=setTimeout(async()=>{
+    if(!q.trim()){document.getElementById('gif-results').innerHTML='';return;}
+    try{
+      const r=await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(q)}&limit=12&rating=g`);
+      const d=await r.json();
+      const res=document.getElementById('gif-results');
+      res.innerHTML='';
+      (d.data||[]).forEach(g=>{
+        const img=document.createElement('img');
+        img.className='gif-thumb';
+        img.src=g.images.fixed_height_small.url;
+        img.dataset.full=g.images.downsized.url;
+        img.onclick=()=>selectGif(g.images.downsized.url);
+        res.appendChild(img);
+      });
+    }catch(e){}
+  },400);
+}
+function selectGif(url){
+  pendingGif=url; pendingFlexCard=null;
+  const p=document.getElementById('chatAttachPreview');
+  document.getElementById('attachLabel').textContent='GIF attached 🎬';
+  p.classList.add('show'); closeGifPicker();
+}
+
+// Card flex picker
+function openFlexPicker(){
+  if(!currentUser){openAuthModal('register');return;}
+  const grid=document.getElementById('flex-card-grid');
+  grid.innerHTML='';
+  if(!collection.length){grid.innerHTML='<p style="color:var(--muted);font-size:.85rem;">No cards to flex yet!</p>';return;}
+  const sorted=[...collection].sort((a,b)=>(ORDER[a.rarity]||4)-(ORDER[b.rarity]||4));
+  sorted.forEach(c=>{
+    const el=buildCard(c,150);
+    el.style.cursor='pointer';
+    el.addEventListener('click',()=>selectFlexCard(c));
+    grid.appendChild(el);
+  });
+  document.getElementById('flex-picker').classList.add('open');
+}
+function closeFlexPicker(){document.getElementById('flex-picker').classList.remove('open');}
+function selectFlexCard(card){
+  pendingFlexCard=card; pendingGif='';
+  const p=document.getElementById('chatAttachPreview');
+  document.getElementById('attachLabel').textContent=`Flexing: ${card.bounty} (${card.rarity}) 🎴`;
+  p.classList.add('show'); closeFlexPicker();
+}
+function clearAttachment(){
+  pendingGif=''; pendingFlexCard=null;
+  document.getElementById('chatAttachPreview').classList.remove('show');
+}
 
 /* ═══════════════════════════════════════════════
    WELCOME BANNER
@@ -1180,10 +1676,14 @@ async function loadPool() {
    INIT + POLLING
 ═══════════════════════════════════════════════ */
 renderCollection();
+updateLockerBadge();
 loadFlexWall();
 loadPool();
 updatePullsUI();
 initWelcomeBanner();
+loadChat(true);
+setInterval(()=>loadChat(false), 5000);
+setInterval(()=>{loadFlexWall();loadPool();},60000);
 
 // Refresh flex wall and pool every 60 seconds
 setInterval(() => { loadFlexWall(); loadPool(); }, 60000);

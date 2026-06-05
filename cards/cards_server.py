@@ -15,8 +15,10 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-USERS_FILE = os.path.join(BASE_DIR, "users.json")
-POOL_FILE  = os.path.join(BASE_DIR, "pool.json")
+DATA_DIR   = os.environ.get("DATA_DIR", BASE_DIR)
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
+POOL_FILE  = os.path.join(DATA_DIR, "pool.json")
+CHAT_FILE  = os.path.join(DATA_DIR, "chat.json")
 PORT       = int(os.environ.get("PORT", 3457))
 
 MAX_PULLS    = 40
@@ -27,17 +29,17 @@ LEG_SEC      = 75 * 60     # new legendary every 75 min
 
 # ── Pull weights ──────────────────────────────────────────────────────────────
 # Roll 0-100; cumulative thresholds:
-#   LEGENDARY < 5  (5%)
-#   EPIC      < 30 (25%)
-#   RARE      < 75 (45%)
-#   UNCOMMON  < 95 (20%)
-#   COMMON    < 100 (5%)
+#   LEGENDARY < 0.2  (0.2%)
+#   EPIC      < 10   (9.8%)
+#   RARE      < 50   (40%)
+#   UNCOMMON  < 85   (35%)
+#   COMMON    < 100  (15%)
 PULL_TIERS = [
-    ("LEGENDARY", 5),
-    ("EPIC",      30),
-    ("RARE",      75),
-    ("UNCOMMON",  95),
-    ("COMMON",    100),
+    ("LEGENDARY", 0.2),
+    ("EPIC",      10.0),
+    ("RARE",      50.0),
+    ("UNCOMMON",  85.0),
+    ("COMMON",    100.0),
 ]
 
 # ── Card templates ────────────────────────────────────────────────────────────
@@ -149,6 +151,34 @@ def load_pool():
 def save_pool(d):
     with open(POOL_FILE,"w",encoding="utf-8") as f:
         json.dump(d,f,indent=2,ensure_ascii=False)
+
+def load_chat():
+    if not os.path.exists(CHAT_FILE):
+        return {"messages":[]}
+    with open(CHAT_FILE,"r",encoding="utf-8") as f:
+        return json.load(f)
+
+def save_chat(d):
+    with open(CHAT_FILE,"w",encoding="utf-8") as f:
+        json.dump(d,f,indent=2,ensure_ascii=False)
+
+def post_system_message(text, card=None, msg_type="system"):
+    with _lock:
+        chat = load_chat()
+        msg = {
+            "id": hashlib.md5(f"sys{time.time()}{random.random()}".encode()).hexdigest()[:8],
+            "username": "SYSTEM",
+            "text": text,
+            "gif": "",
+            "card": card,
+            "upvotes": 0,
+            "upvotedBy": [],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "type": msg_type,
+        }
+        chat["messages"].append(msg)
+        chat["messages"] = chat["messages"][-300:]
+        save_chat(chat)
 
 # ── Scheduler ─────────────────────────────────────────────────────────────────
 def scheduler_loop():
@@ -293,6 +323,17 @@ class Handler(BaseHTTPRequestHandler):
                 "joinedAt": user.get("joinedAt",""),
             })
 
+        # ── GET /api/chat ───────────────────────────────────────
+        elif p.startswith("/api/chat"):
+            chat = load_chat()
+            msgs = chat.get("messages",[])
+            since = ""
+            if "since=" in p:
+                since = p.split("since=")[1].split("&")[0]
+            if since:
+                msgs = [m for m in msgs if m.get("timestamp","") > since]
+            self.json_resp(200,{"messages": msgs[-80:]})
+
         # ── Static files ────────────────────────────────────────
         elif p in ("/",""):
             self.file_resp(os.path.join(BASE_DIR,"index.html"))
@@ -363,6 +404,13 @@ class Handler(BaseHTTPRequestHandler):
                 "pullsLeft": pulls_left,
                 "cooldownLeft": cooldown_left,
             })
+            # Legendary alert in chat
+            legs = [c for c in pulled if c.get("rarity")=="LEGENDARY"]
+            for card in legs:
+                threading.Thread(target=post_system_message, args=(
+                    f"🔔 {uname} just pulled a LEGENDARY: {card['bounty']}!",
+                    card, "legendary_alert"
+                ), daemon=True).start()
         # ── POST /api/discard ───────────────────────────────────
         elif p == "/api/discard":
             body  = self.body()
@@ -381,6 +429,56 @@ class Handler(BaseHTTPRequestHandler):
                 save_users(d)
             print(f"[{_ts()}] {uname} discarded card {iid} ({removed} removed)")
             self.json_resp(200,{"ok":True,"removed":removed})
+
+        # ── POST /api/chat ──────────────────────────────────────
+        elif p == "/api/chat":
+            body  = self.body()
+            uname = self.headers.get("X-Username","").strip() or body.get("username","").strip()
+            if not uname:
+                self.json_resp(401,{"error":"Not logged in"}); return
+            text  = str(body.get("text","")).strip()[:400]
+            gif   = str(body.get("gif","")).strip()
+            card  = body.get("card")
+            if not text and not gif and not card:
+                self.json_resp(400,{"error":"Empty message"}); return
+            msg = {
+                "id": hashlib.md5(f"{uname}{time.time()}{random.random()}".encode()).hexdigest()[:8],
+                "username": uname,
+                "text": text,
+                "gif": gif,
+                "card": card,
+                "upvotes": 0,
+                "upvotedBy": [],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "type": "message",
+            }
+            with _lock:
+                chat = load_chat()
+                chat["messages"].append(msg)
+                chat["messages"] = chat["messages"][-300:]
+                save_chat(chat)
+            self.json_resp(201,{"ok":True,"message":msg})
+
+        # ── POST /api/upvote ────────────────────────────────────
+        elif p == "/api/upvote":
+            body   = self.body()
+            uname  = self.headers.get("X-Username","").strip() or body.get("username","").strip()
+            msg_id = body.get("messageId","")
+            with _lock:
+                chat = load_chat()
+                for m in chat["messages"]:
+                    if m["id"] == msg_id:
+                        voted = m.setdefault("upvotedBy",[])
+                        if uname in voted:
+                            voted.remove(uname)
+                            m["upvotes"] = max(0, m.get("upvotes",0)-1)
+                        else:
+                            voted.append(uname)
+                            m["upvotes"] = m.get("upvotes",0)+1
+                        save_chat(chat)
+                        self.json_resp(200,{"ok":True,"upvotes":m["upvotes"],"voted":uname in voted})
+                        return
+            self.json_resp(404,{"error":"Message not found"})
 
         else:
             self.json_resp(404,{"error":"Not found"})
