@@ -752,11 +752,10 @@
   </div>
 
   <div class="pull-meta">
-    <div class="pull-counter">Pulls left: <span id="pullsLeft">–</span> &nbsp;·&nbsp; Total pulls: <span id="totalPulls">0</span></div>
-    <div class="cooldown-bar-wrap" id="cooldownBarWrap">
-      <div class="cooldown-bar" id="cooldownBar" style="width:100%;"></div>
-    </div>
-    <div class="cooldown-text" id="cooldownText">⏳ Cooldown: 30:00</div>
+    <div class="pull-counter">🎯 Rolls: <span id="pullsLeft">–</span> / 20,000 &nbsp;·&nbsp; Cards pulled: <span id="totalPulls">0</span></div>
+    <div class="cooldown-text" id="cooldownText" style="display:none;"></div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem;">+15 rolls every 15 min while logged in</div>
+    <div style="font-size:.72rem;color:var(--blue);margin-top:.1rem;" id="nextCreditLabel"></div>
     <div class="pool-ticker">
       <div class="pt-dot"></div>
       <span id="poolStatus">Loading card pool...</span>
@@ -867,15 +866,15 @@ const ORDER = {LEGENDARY:0,EPIC:1,RARE:2,UNCOMMON:3,COMMON:4};
 /* ═══════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════ */
-let currentUser  = JSON.parse(localStorage.getItem('bw_user')||'null');
-let collection   = JSON.parse(localStorage.getItem('bw_collection')||'[]');
-let collFilter   = 'all';
-let pulling      = false;
-let pendingCards = [];
-let pullsLeft    = 40;
-let cooldownEnd  = 0;
-let cooldownTimer = null;
-let poolSize     = 0;
+let currentUser   = JSON.parse(localStorage.getItem('bw_user')||'null');
+let collection    = currentUser ? JSON.parse(localStorage.getItem('bw_collection')||'[]') : [];
+let collFilter    = 'all';
+let pulling       = false;
+let pendingCards  = [];
+let rollCredits   = currentUser ? (currentUser.rollCredits||0) : 0;
+let poolSize      = 0;
+let creditTimer   = null;   // 15-min interval for earning rolls
+let creditCountdown = null; // 1-sec countdown display
 
 /* ═══════════════════════════════════════════════
    AUTH
@@ -937,27 +936,31 @@ function setAuthError(msg) { document.getElementById('authError').textContent = 
 function loginUser(data) {
   currentUser = data;
   localStorage.setItem('bw_user', JSON.stringify(data));
-  // Merge server collection with local
   if (data.collection && data.collection.length > 0) {
     collection = data.collection;
     localStorage.setItem('bw_collection', JSON.stringify(collection));
+  } else {
+    collection = [];
+    localStorage.removeItem('bw_collection');
   }
-  pullsLeft = data.pullsLeft;
-  if (data.cooldownLeft > 0) startCooldownUI(data.cooldownLeft);
+  rollCredits = data.rollCredits || 0;
   updateNavUser();
   updatePullsUI();
   renderCollection();
+  updateLockerBadge();
   closeAuthModal();
   dismissWelcome();
+  startCreditTimer();
 }
 
 function logout() {
+  stopCreditTimer();
   currentUser = null;
+  collection  = [];
+  rollCredits = 0;
   localStorage.removeItem('bw_user');
-  collection = [];
   localStorage.removeItem('bw_collection');
   updateNavUser();
-  pullsLeft = 40;
   updatePullsUI();
   renderCollection();
   updateLockerBadge();
@@ -990,8 +993,14 @@ function packClick() { triggerPull(1); }
 
 async function triggerPull(count) {
   if (pulling) return;
-  if (!currentUser) { openAuthModal(); return; }
-  if (pullsLeft <= 0) return;
+  if (!currentUser) { openAuthModal('register'); return; }
+  if (rollCredits <= 0) {
+    const txt=document.getElementById('cooldownText');
+    txt.style.display='block';
+    txt.textContent='⏳ No rolls left! Earn +15 in 15 min.';
+    setTimeout(()=>txt.style.display='none',3000);
+    return;
+  }
   pulling = true;
   setBtnsDisabled(true);
   try {
@@ -1001,57 +1010,84 @@ async function triggerPull(count) {
       body: JSON.stringify({count, username: currentUser.username})
     });
     const d = await r.json();
-    if (r.status === 429) {
-      startCooldownUI(d.cooldownLeft);
-      pulling = false; setBtnsDisabled(false); return;
+    if (!r.ok) {
+      const txt=document.getElementById('cooldownText');
+      txt.style.display='block';
+      txt.textContent=`⚠️ ${d.error||'Pull failed'}`;
+      setTimeout(()=>txt.style.display='none',3500);
+      if (d.rollCredits!==undefined) rollCredits=d.rollCredits;
+      pulling=false; setBtnsDisabled(false); return;
     }
-    if (!r.ok) { pulling=false; setBtnsDisabled(false); return; }
-    pullsLeft = d.pullsLeft;
+    rollCredits  = d.rollCredits;
     pendingCards = d.cards;
     updatePullsUI();
-    if (d.cooldownLeft > 0) startCooldownUI(d.cooldownLeft);
     if (d.cards.length === 1) showSingleReveal(d.cards[0]);
     else showMultiReveal(d.cards);
   } catch(e) {
-    // Offline fallback
     pulling = false; setBtnsDisabled(false);
   }
 }
 
 function setBtnsDisabled(v) {
-  document.getElementById('btn1x').disabled = v || pullsLeft<=0;
-  document.getElementById('btn10x').disabled = v || pullsLeft<=0;
+  const noRolls = !currentUser || rollCredits <= 0;
+  document.getElementById('btn1x').disabled  = v || noRolls;
+  document.getElementById('btn10x').disabled = v || noRolls;
 }
 
 function updatePullsUI() {
-  document.getElementById('pullsLeft').textContent = pullsLeft;
-  document.getElementById('totalPulls').textContent = collection.length;
+  document.getElementById('pullsLeft').textContent  = currentUser ? rollCredits.toLocaleString() : '–';
+  document.getElementById('totalPulls').textContent = collection.length.toLocaleString();
   setBtnsDisabled(false);
 }
 
 /* ═══════════════════════════════════════════════
-   COOLDOWN COUNTDOWN
+   ROLL CREDIT TIMER (15 min while logged in)
 ═══════════════════════════════════════════════ */
-function startCooldownUI(sec) {
-  cooldownEnd = Date.now() + sec*1000;
-  setBtnsDisabled(true);
-  const barWrap = document.getElementById('cooldownBarWrap');
-  const bar     = document.getElementById('cooldownBar');
-  const txt     = document.getElementById('cooldownText');
-  barWrap.style.display = 'block'; txt.style.display = 'block';
-  if (cooldownTimer) clearInterval(cooldownTimer);
-  const total = sec;
-  cooldownTimer = setInterval(() => {
-    const left = Math.max(0, Math.ceil((cooldownEnd - Date.now())/1000));
-    const m = Math.floor(left/60), s = left%60;
-    txt.textContent = `⏳ Cooldown: ${m}:${s.toString().padStart(2,'0')}`;
-    bar.style.width = (left/total*100)+'%';
-    if (left <= 0) {
-      clearInterval(cooldownTimer);
-      barWrap.style.display='none'; txt.style.display='none';
-      pullsLeft = 40; updatePullsUI();
+function startCreditTimer() {
+  stopCreditTimer();
+  if (!currentUser) return;
+  let secsUntilNext = 15 * 60;
+  // Show countdown
+  creditCountdown = setInterval(() => {
+    if (!currentUser) { stopCreditTimer(); return; }
+    secsUntilNext--;
+    if (secsUntilNext <= 0) {
+      secsUntilNext = 15 * 60;
+      claimCredits();
     }
+    const m = Math.floor(secsUntilNext/60), s = secsUntilNext%60;
+    const lbl = document.getElementById('nextCreditLabel');
+    if (lbl) lbl.textContent = `⏱ +15 rolls in ${m}:${s.toString().padStart(2,'0')}`;
   }, 1000);
+}
+
+function stopCreditTimer() {
+  if (creditCountdown) { clearInterval(creditCountdown); creditCountdown=null; }
+  if (creditTimer)     { clearInterval(creditTimer); creditTimer=null; }
+  const lbl=document.getElementById('nextCreditLabel');
+  if (lbl) lbl.textContent='';
+}
+
+async function claimCredits() {
+  if (!currentUser) return;
+  try {
+    const r = await fetch(`${API}/api/credits`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Username':currentUser.username},
+      body: JSON.stringify({username:currentUser.username})
+    });
+    if (r.ok) {
+      const d = await r.json();
+      rollCredits = d.rollCredits;
+      updatePullsUI();
+      // Small toast for credits
+      const el = document.createElement('div');
+      el.style.cssText='position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:rgba(74,158,255,.9);color:white;font-weight:800;padding:.5rem 1.2rem;border-radius:999px;font-size:.8rem;z-index:800;animation:fadein .3s ease both;';
+      el.textContent=`+${d.added} rolls! You now have ${d.rollCredits.toLocaleString()} 🎯`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),3000);
+    }
+  } catch(e){}
 }
 
 /* ═══════════════════════════════════════════════
@@ -1741,11 +1777,19 @@ setInterval(() => { loadFlexWall(); loadPool(); }, 60000);
 // Restore user state
 if (currentUser) {
   updateNavUser();
+  rollCredits = currentUser.rollCredits || 0;
+  updatePullsUI();
+  startCreditTimer();
+  // Refresh from server
   fetch(`${API}/api/users/${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).then(d=>{
-    if (d.pullsLeft !== undefined) {
-      pullsLeft = d.pullsLeft;
-      if (d.cooldownLeft > 0) startCooldownUI(d.cooldownLeft);
+    if (d.rollCredits !== undefined) {
+      rollCredits = d.rollCredits;
       updatePullsUI();
+    }
+    if (d.collection && d.collection.length > 0) {
+      collection = d.collection;
+      localStorage.setItem('bw_collection', JSON.stringify(collection));
+      renderCollection(); updateLockerBadge();
     }
   }).catch(()=>{});
 }

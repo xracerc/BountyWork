@@ -21,11 +21,14 @@ POOL_FILE  = os.path.join(DATA_DIR, "pool.json")
 CHAT_FILE  = os.path.join(DATA_DIR, "chat.json")
 PORT       = int(os.environ.get("PORT", 3457))
 
-MAX_PULLS    = 40
-COOLDOWN_SEC = 30 * 60     # 30 minutes
-RARE_SEC     = 20 * 60     # new rare every 20 min
-EPIC_SEC     = 30 * 60     # new epic every 30 min
-LEG_SEC      = 75 * 60     # new legendary every 75 min
+STARTING_ROLLS   = 40          # rolls given on account creation
+CREDIT_INTERVAL  = 15 * 60    # earn credits every 15 min
+CREDITS_PER_TICK = 15          # rolls earned per interval
+MAX_ROLLS        = 20_000      # max roll credits
+MAX_LOCKER       = 100_000     # max cards in locker
+RARE_SEC         = 20 * 60     # new rare every 20 min
+EPIC_SEC         = 30 * 60     # new epic every 30 min
+LEG_SEC          = 75 * 60     # new legendary every 75 min
 
 # ── Pull weights ──────────────────────────────────────────────────────────────
 # Roll 0-100; cumulative thresholds:
@@ -317,16 +320,11 @@ class Handler(BaseHTTPRequestHandler):
             batch_start = user.get("batchStart", 0)
             batch_pulls = user.get("batchPulls", 0)
             elapsed = now - batch_start
-            if elapsed >= COOLDOWN_SEC:
-                batch_pulls = 0
-            pulls_left = max(0, MAX_PULLS - batch_pulls)
-            cooldown_left = max(0, int(COOLDOWN_SEC - elapsed)) if batch_pulls >= MAX_PULLS else 0
             self.json_resp(200, {
                 "username": user["username"],
                 "collection": user.get("collection",[]),
                 "totalCards": len(user.get("collection",[])),
-                "pullsLeft": pulls_left,
-                "cooldownLeft": cooldown_left,
+                "rollCredits": user.get("rollCredits", STARTING_ROLLS),
                 "joinedAt": user.get("joinedAt",""),
             })
 
@@ -369,13 +367,13 @@ class Handler(BaseHTTPRequestHandler):
                     "username": uname,
                     "password": hash_pw(pwd),
                     "collection": [],
-                    "batchPulls": 0,
-                    "batchStart": 0,
+                    "rollCredits": STARTING_ROLLS,
+                    "lastCreditClaim": 0,
                     "joinedAt": datetime.now(timezone.utc).isoformat(),
                 }
                 save_users(d)
             print(f"[{_ts()}] New user: {uname}")
-            self.json_resp(201,{"ok":True,"username":uname,"pullsLeft":MAX_PULLS,"cooldownLeft":0,"collection":[]})
+            self.json_resp(201,{"ok":True,"username":uname,"rollCredits":STARTING_ROLLS,"collection":[]})
 
         # ── POST /api/login ─────────────────────────────────────
         elif p == "/api/login":
@@ -389,56 +387,63 @@ class Handler(BaseHTTPRequestHandler):
             stored = user.get("password","")
             if stored and stored != hash_pw(pwd):
                 self.json_resp(401,{"error":"Wrong password"}); return
-            now = time.time()
-            elapsed = now - user.get("batchStart",0)
-            batch_pulls = user.get("batchPulls",0)
-            if elapsed >= COOLDOWN_SEC: batch_pulls=0
-            pulls_left   = max(0, MAX_PULLS - batch_pulls)
-            cooldown_left= max(0, int(COOLDOWN_SEC-elapsed)) if batch_pulls>=MAX_PULLS else 0
             self.json_resp(200,{
                 "username": uname,
                 "collection": user.get("collection",[]),
-                "pullsLeft": pulls_left,
-                "cooldownLeft": cooldown_left,
+                "rollCredits": user.get("rollCredits", STARTING_ROLLS),
             })
 
-        # ── POST /api/pull ──────────────────────────────────────
-        elif p == "/api/pull":
-            body    = self.body()
-            uname   = self.headers.get("X-Username","").strip() or body.get("username","").strip()
-            count   = min(int(body.get("count",1)), 10)
+        # ── POST /api/credits (earn +15 rolls every 15 min) ────
+        elif p == "/api/credits":
+            uname = self.headers.get("X-Username","").strip() or self.body().get("username","").strip()
             if not uname:
                 self.json_resp(401,{"error":"Not logged in"}); return
             with _lock:
-                d = load_users()
+                d    = load_users()
                 user = d["users"].get(uname)
                 if not user:
                     self.json_resp(404,{"error":"User not found"}); return
-                now = time.time()
-                elapsed = now - user.get("batchStart",0)
-                if elapsed >= COOLDOWN_SEC:
-                    user["batchPulls"] = 0
-                    user["batchStart"] = now
-                batch_pulls = user.get("batchPulls",0)
-                if batch_pulls >= MAX_PULLS:
-                    remaining = int(COOLDOWN_SEC - elapsed)
-                    self.json_resp(429,{"error":"Cooldown active","cooldownLeft":remaining}); return
-                actual = min(count, MAX_PULLS - batch_pulls)
+                now  = time.time()
+                last = user.get("lastCreditClaim",0)
+                if now - last < CREDIT_INTERVAL:
+                    wait = int(CREDIT_INTERVAL-(now-last))
+                    self.json_resp(429,{"error":"Too soon","waitSec":wait,
+                                        "rollCredits":user.get("rollCredits",0)}); return
+                cur  = user.get("rollCredits", 0)
+                new  = min(MAX_ROLLS, cur + CREDITS_PER_TICK)
+                user["rollCredits"]     = new
+                user["lastCreditClaim"] = now
+                save_users(d)
+            self.json_resp(200,{"ok":True,"rollCredits":new,"added":new-cur})
+
+        # ── POST /api/pull ──────────────────────────────────────
+        elif p == "/api/pull":
+            body  = self.body()
+            uname = self.headers.get("X-Username","").strip() or body.get("username","").strip()
+            count = min(int(body.get("count",1)), 10)
+            if not uname:
+                self.json_resp(401,{"error":"Not logged in"}); return
+            with _lock:
+                d    = load_users()
+                user = d["users"].get(uname)
+                if not user:
+                    self.json_resp(404,{"error":"User not found"}); return
+                credits = user.get("rollCredits", 0)
+                if credits <= 0:
+                    self.json_resp(429,{"error":"No rolls left! Wait 15 min for +15 rolls.","rollCredits":0}); return
+                # Check locker cap
+                locker_size = len(user.get("collection",[]))
+                if locker_size >= MAX_LOCKER:
+                    self.json_resp(400,{"error":"Locker full! (100,000 card limit) Discard some cards first."}); return
+                actual = min(count, credits, MAX_LOCKER - locker_size)
                 pulled = [do_pull() for _ in range(actual)]
                 user["collection"].extend(pulled)
-                user["batchPulls"] = batch_pulls + actual
-                if user["batchPulls"] == actual and user.get("batchStart",0) == 0:
-                    user["batchStart"] = now
-                elif user.get("batchStart",0) == 0 or elapsed >= COOLDOWN_SEC:
-                    user["batchStart"] = now
+                user["rollCredits"] = credits - actual
                 save_users(d)
-            pulls_left = max(0, MAX_PULLS - user["batchPulls"])
-            cooldown_left = max(0, int(COOLDOWN_SEC - (time.time() - user["batchStart"]))) if user["batchPulls"] >= MAX_PULLS else 0
             self.json_resp(200,{
                 "ok": True,
                 "cards": pulled,
-                "pullsLeft": pulls_left,
-                "cooldownLeft": cooldown_left,
+                "rollCredits": user["rollCredits"],
             })
             # Legendary alert in chat
             legs = [c for c in pulled if c.get("rarity")=="LEGENDARY"]
