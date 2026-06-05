@@ -13,6 +13,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+# Force unbuffered output so logs appear in Render immediately
+os.environ["PYTHONUNBUFFERED"] = "1"
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR   = os.environ.get("DATA_DIR", BASE_DIR)
@@ -257,10 +259,10 @@ def _backup_to_gist(data):
         )
         with urllib.request.urlopen(req, timeout=15) as r:
             if r.status == 200:
-                print(f"[{_ts()}] Gist saved: {len(data.get('users',{}))} users")
+                print(f"[{_ts()}] Gist saved: {len(data.get('users',{}))} users", flush=True)
                 return True
     except Exception as e:
-        print(f"[{_ts()}] Gist backup ERROR: {e}")
+        print(f"[{_ts()}] Gist backup ERROR: {e}", flush=True)
     return False
 
 def _restore_from_gist():
@@ -282,7 +284,7 @@ def _restore_from_gist():
             if data and isinstance(data.get("users"), dict):
                 return data
     except Exception as e:
-        print(f"[{_ts()}] Gist restore failed: {e}")
+        print(f"[{_ts()}] Gist restore failed: {e}", flush=True)
     return None
 
 def load_pool():
@@ -333,7 +335,7 @@ def post_system_message(text, card=None, msg_type="system"):
 # ── Card drop cycle (every 40 min: 1 Leg + 3 Epic + 5 Rare + 7 Uncommon + 10 Common)
 def run_drop_cycle():
     ts = _ts()
-    print(f"\n[{ts}] Running 40-min card drop...")
+    print(f"\n[{ts}] Running 40-min card drop...", flush=True)
     with _lock:
         p = load_pool()
         used = set(p.get("usedTemplates", []))
@@ -351,14 +353,14 @@ def run_drop_cycle():
                 card = mint_card(rarity, t)
                 new_cards.append(card)
                 used.add(t["bounty"])
-                print(f"  + [{rarity}] {t['bounty']}")
+                print(f"  + [{rarity}] {t['bounty']}", flush=True)
 
         p["pool"].extend(new_cards)
         p["pool"] = p["pool"][-500:]
         p["usedTemplates"] = list(used)[-300:]
         p["lastCycle"] = time.time()
         save_pool(p)
-    print(f"[{ts}] Dropped {len(new_cards)} new cards.\n")
+    print(f"[{ts}] Dropped {len(new_cards)} new cards.\n", flush=True)
 
 def scheduler_loop():
     while True:
@@ -429,8 +431,20 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         p = self.path.split("?")[0]
 
+        # ── GET /api/health ────────────────────────────────────
+        if p == "/api/health":
+            d = load_users()
+            self.json_resp(200,{
+                "status": "ok",
+                "users": len(d.get("users",{})),
+                "gist_configured": bool(GIST_TOKEN and GIST_ID),
+                "gist_id": (GIST_ID[:8]+"...") if GIST_ID else "NOT SET",
+                "token_set": bool(GIST_TOKEN),
+                "data_dir": DATA_DIR,
+            })
+
         # ── GET /api/pool ──────────────────────────────────────
-        if p == "/api/pool":
+        elif p == "/api/pool":
             self.json_resp(200, load_pool())
 
         # ── GET /api/users ─────────────────────────────────────
@@ -521,7 +535,7 @@ class Handler(BaseHTTPRequestHandler):
                     "joinedAt": datetime.now(timezone.utc).isoformat(),
                 }
                 save_users(d)
-            print(f"[{_ts()}] New user: {uname}")
+            print(f"[{_ts()}] New user: {uname}", flush=True)
             self.json_resp(201,{"ok":True,"username":uname,"rollCredits":STARTING_ROLLS,"collection":[]})
 
         # ── POST /api/login ─────────────────────────────────────
@@ -617,7 +631,7 @@ class Handler(BaseHTTPRequestHandler):
                 user["collection"] = [c for c in user["collection"] if c.get("instanceId") != iid]
                 removed = before - len(user["collection"])
                 save_users(d)
-            print(f"[{_ts()}] {uname} discarded card {iid} ({removed} removed)")
+            print(f"[{_ts()}] {uname} discarded card {iid} ({removed} removed)", flush=True)
             self.json_resp(200,{"ok":True,"removed":removed})
 
         # ── POST /api/chat ──────────────────────────────────────
@@ -687,34 +701,34 @@ if __name__ == "__main__":
     print("="*55)
     print("BOUNTYWORK CARDS SERVER")
     print("="*55)
-    print(f"  Port           : {PORT}")
-    print(f"  Data dir       : {DATA_DIR}")
-    print(f"  Starting rolls : {STARTING_ROLLS}")
-    print(f"  Max rolls      : {MAX_ROLLS}")
-    print(f"  Max locker     : {MAX_LOCKER}")
-    print(f"  Credits/15min  : {CREDITS_PER_TICK}")
-    print(f"  Drop cycle     : every {CYCLE_SEC//60} min")
-    print(f"  Per cycle      : 1 Leg + 3 Epic + 5 Rare + 7 Uncommon + 10 Common")
-    print(f"  Template pool  : {sum(len(v) for v in TEMPLATES.values())} unique cards")
+    print(f"  Port           : {PORT}", flush=True)
+    print(f"  Data dir       : {DATA_DIR}", flush=True)
+    print(f"  Starting rolls : {STARTING_ROLLS}", flush=True)
+    print(f"  Max rolls      : {MAX_ROLLS}", flush=True)
+    print(f"  Max locker     : {MAX_LOCKER}", flush=True)
+    print(f"  Credits/15min  : {CREDITS_PER_TICK}", flush=True)
+    print(f"  Drop cycle     : every {CYCLE_SEC//60} min", flush=True)
+    print(f"  Per cycle      : 1 Leg + 3 Epic + 5 Rare + 7 Uncommon + 10 Common", flush=True)
+    print(f"  Template pool  : {sum(len(v) for v in TEMPLATES.values())} unique cards", flush=True)
     print("="*55)
 
     # ── USERS: always prefer Gist (most up-to-date) then local, then fresh ─────
-    print(f"  Checking Gist for latest user data...")
+    print(f"  Checking Gist for latest user data...", flush=True)
     gist_data = _restore_from_gist()
 
     if gist_data and gist_data.get("users"):
         # Write Gist data to local file (authoritative source)
         with open(USERS_FILE,"w",encoding="utf-8") as f:
             json.dump(gist_data,f,indent=2,ensure_ascii=False)
-        print(f"  Restored {len(gist_data['users'])} user(s) from Gist backup!")
+        print(f"  Restored {len(gist_data['users'])} user(s) from Gist backup!", flush=True)
     elif os.path.exists(USERS_FILE):
         d = load_users()
         total = len(d.get("users",{}))
-        print(f"  Loaded {total} user(s) from local file (no Gist data)")
+        print(f"  Loaded {total} user(s) from local file (no Gist data)", flush=True)
         # Back up local to Gist now
         _backup_to_gist(d)
     else:
-        print(f"  No user data found anywhere — starting fresh")
+        print(f"  No user data found anywhere — starting fresh", flush=True)
         with open(USERS_FILE,"w",encoding="utf-8") as f:
             json.dump({"users":{}},f)
         _backup_to_gist({"users":{}})
@@ -722,10 +736,10 @@ if __name__ == "__main__":
     # ── POOL: load existing or seed fresh ──────────────────────────────────────
     if os.path.exists(POOL_FILE):
         p = load_pool()
-        print(f"  Loaded existing pool ({len(p.get('pool',[]))} cards)")
+        print(f"  Loaded existing pool ({len(p.get('pool',[]))} cards)", flush=True)
     else:
         save_pool({"pool":[], "usedTemplates":[], "lastCycle":0})
-        print(f"  Created fresh pool — running initial drop...")
+        print(f"  Created fresh pool — running initial drop...", flush=True)
         run_drop_cycle()
 
     # ── CHAT: load existing or create fresh ────────────────────────────────────
@@ -735,7 +749,7 @@ if __name__ == "__main__":
     threading.Thread(target=scheduler_loop, daemon=True).start()
 
     server = HTTPServer(("0.0.0.0", PORT), Handler)
-    print(f"\nServer running -> http://localhost:{PORT}\n")
+    print(f"\nServer running -> http://localhost:{PORT}\n", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
