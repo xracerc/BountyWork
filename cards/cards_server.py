@@ -152,6 +152,13 @@ def save_pool(d):
     with open(POOL_FILE,"w",encoding="utf-8") as f:
         json.dump(d,f,indent=2,ensure_ascii=False)
 
+def hash_pw(pw):
+    return hashlib.sha256(pw.encode("utf-8")).hexdigest()
+
+# In-memory chat cooldown: {username: last_send_timestamp}
+_chat_cd = {}
+CHAT_CD_SEC = 20
+
 def load_chat():
     if not os.path.exists(CHAT_FILE):
         return {"messages":[]}
@@ -332,7 +339,7 @@ class Handler(BaseHTTPRequestHandler):
                 since = p.split("since=")[1].split("&")[0]
             if since:
                 msgs = [m for m in msgs if m.get("timestamp","") > since]
-            self.json_resp(200,{"messages": msgs[-80:]})
+            self.json_resp(200,{"messages": msgs[-50:]})
 
         # ── Static files ────────────────────────────────────────
         elif p in ("/",""):
@@ -345,18 +352,22 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── POST /api/register ──────────────────────────────────
         if p == "/api/register":
-            body = self.body()
+            body  = self.body()
             uname = body.get("username","").strip()
+            pwd   = body.get("password","").strip()
             if not uname or len(uname) < 2 or len(uname) > 20:
                 self.json_resp(400,{"error":"Username must be 2-20 characters"}); return
             if not uname.replace("_","").replace("-","").isalnum():
                 self.json_resp(400,{"error":"Only letters, numbers, _ and - allowed"}); return
+            if not pwd or len(pwd) < 4:
+                self.json_resp(400,{"error":"Password must be at least 4 characters"}); return
             with _lock:
                 d = load_users()
                 if uname.lower() in {k.lower() for k in d["users"]}:
                     self.json_resp(409,{"error":"Username already taken"}); return
                 d["users"][uname] = {
                     "username": uname,
+                    "password": hash_pw(pwd),
                     "collection": [],
                     "batchPulls": 0,
                     "batchStart": 0,
@@ -365,6 +376,31 @@ class Handler(BaseHTTPRequestHandler):
                 save_users(d)
             print(f"[{_ts()}] New user: {uname}")
             self.json_resp(201,{"ok":True,"username":uname,"pullsLeft":MAX_PULLS,"cooldownLeft":0,"collection":[]})
+
+        # ── POST /api/login ─────────────────────────────────────
+        elif p == "/api/login":
+            body  = self.body()
+            uname = body.get("username","").strip()
+            pwd   = body.get("password","").strip()
+            d     = load_users()
+            user  = d["users"].get(uname)
+            if not user:
+                self.json_resp(404,{"error":"Username not found"}); return
+            stored = user.get("password","")
+            if stored and stored != hash_pw(pwd):
+                self.json_resp(401,{"error":"Wrong password"}); return
+            now = time.time()
+            elapsed = now - user.get("batchStart",0)
+            batch_pulls = user.get("batchPulls",0)
+            if elapsed >= COOLDOWN_SEC: batch_pulls=0
+            pulls_left   = max(0, MAX_PULLS - batch_pulls)
+            cooldown_left= max(0, int(COOLDOWN_SEC-elapsed)) if batch_pulls>=MAX_PULLS else 0
+            self.json_resp(200,{
+                "username": uname,
+                "collection": user.get("collection",[]),
+                "pullsLeft": pulls_left,
+                "cooldownLeft": cooldown_left,
+            })
 
         # ── POST /api/pull ──────────────────────────────────────
         elif p == "/api/pull":
@@ -436,16 +472,22 @@ class Handler(BaseHTTPRequestHandler):
             uname = self.headers.get("X-Username","").strip() or body.get("username","").strip()
             if not uname:
                 self.json_resp(401,{"error":"Not logged in"}); return
+            # Rate limit: 20s cooldown per user
+            now_cd = time.time()
+            last_cd = _chat_cd.get(uname, 0)
+            if now_cd - last_cd < CHAT_CD_SEC:
+                remaining = int(CHAT_CD_SEC - (now_cd - last_cd))
+                self.json_resp(429,{"error":f"Wait {remaining}s before sending again","cooldown":remaining}); return
             text  = str(body.get("text","")).strip()[:400]
-            gif   = str(body.get("gif","")).strip()
             card  = body.get("card")
-            if not text and not gif and not card:
+            if not text and not card:
                 self.json_resp(400,{"error":"Empty message"}); return
+            _chat_cd[uname] = now_cd
             msg = {
                 "id": hashlib.md5(f"{uname}{time.time()}{random.random()}".encode()).hexdigest()[:8],
                 "username": uname,
                 "text": text,
-                "gif": gif,
+                "gif": "",
                 "card": card,
                 "upvotes": 0,
                 "upvotedBy": [],

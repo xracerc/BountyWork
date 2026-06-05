@@ -657,13 +657,18 @@
 <!-- ═══ AUTH MODAL ═══ -->
 <div class="modal-overlay" id="authModal">
   <div class="modal-box">
-    <div class="modal-title">🎯 JOIN THE HUNT</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.25rem;">
+      <div class="modal-title">🎯 JOIN THE HUNT</div>
+      <button onclick="closeAuthModal()" style="background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem;transition:color .2s;" title="Close">✕</button>
+    </div>
     <p class="modal-sub">Create your hunter profile to pull cards and flex your collection with the community.</p>
     <div class="modal-tabs">
       <button class="m-tab active" id="tabRegister" onclick="switchTab('register')">Sign Up</button>
       <button class="m-tab" id="tabLogin" onclick="switchTab('login')">Log In</button>
     </div>
-    <input class="modal-input" id="authUsername" placeholder="Choose a username (2-20 chars)" maxlength="20" oninput="clearAuthError()"/>
+    <input class="modal-input" id="authUsername" placeholder="Username (2-20 chars)" maxlength="20" oninput="clearAuthError()"/>
+    <input class="modal-input" id="authPassword" type="password" placeholder="Password (min 4 chars)" oninput="clearAuthError()"/>
+    <input class="modal-input" id="authConfirm" type="password" placeholder="Confirm password" oninput="clearAuthError()" style="display:none;"/>
     <div class="modal-error" id="authError"></div>
     <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">🎯 Create Account</button>
     <div class="modal-switch" id="authSwitch">Already have an account? <a onclick="switchTab('login')">Log in</a></div>
@@ -780,7 +785,7 @@
 <section id="chat-section">
   <div class="chat-wrap">
     <div class="chat-head">
-      <div class="chat-title">💬 HUNTER CHAT</div>
+      <div class="chat-title">💬 BOUNTY CHAT</div>
       <div class="chat-online"><div class="dot"></div><span id="chatOnlineCount">0</span> online</div>
     </div>
     <div id="chat-messages">
@@ -794,11 +799,11 @@
       <div class="chat-input-row">
         <input id="chatInput" placeholder="Chat with hunters... (sign in to chat)" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
         <div class="chat-action-btns">
-          <button class="btn-chat-action" onclick="openGifPicker()" title="Send GIF">GIF</button>
           <button class="btn-chat-action" onclick="openFlexPicker()" title="Flex a card">🎴 Flex</button>
-          <button class="btn-chat-send" onclick="sendChatMsg()">Send</button>
+          <button class="btn-chat-send" id="chatSendBtn" onclick="sendChatMsg()">Send</button>
         </div>
       </div>
+    <div id="chatCooldownBar" style="display:none;font-size:.72rem;color:#f59e0b;font-weight:700;margin-top:.3rem;">⏳ <span id="chatCooldownSec">20</span>s before you can send again</div>
     </div>
   </div>
 </section>
@@ -890,6 +895,7 @@ function switchTab(t) {
   document.getElementById('tabRegister').classList.toggle('active', t==='register');
   document.getElementById('tabLogin').classList.toggle('active', t==='login');
   document.getElementById('authSubmitBtn').textContent = t==='register' ? '🎯 Create Account' : '🔓 Log In';
+  document.getElementById('authConfirm').style.display = t==='register' ? 'block' : 'none';
   document.getElementById('authSwitch').innerHTML = t==='register'
     ? 'Already have an account? <a onclick="switchTab(\'login\')">Log in</a>'
     : 'New here? <a onclick="switchTab(\'register\')">Sign up</a>';
@@ -899,23 +905,28 @@ function clearAuthError() { document.getElementById('authError').textContent='';
 
 async function submitAuth() {
   const uname = document.getElementById('authUsername').value.trim();
+  const pwd   = document.getElementById('authPassword').value;
+  const conf  = document.getElementById('authConfirm').value;
   if (!uname) { setAuthError('Enter a username'); return; }
+  if (!pwd)   { setAuthError('Enter a password'); return; }
+  if (authTab==='register' && pwd !== conf) { setAuthError('Passwords do not match'); return; }
+  if (authTab==='register' && pwd.length < 4) { setAuthError('Password must be at least 4 characters'); return; }
   const btn = document.getElementById('authSubmitBtn');
   btn.disabled = true; btn.textContent = '...';
   try {
     if (authTab === 'register') {
-      const r = await fetch(`${API}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname})});
+      const r = await fetch(`${API}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,password:pwd})});
       const d = await r.json();
       if (!r.ok) { setAuthError(d.error); btn.disabled=false; btn.textContent='🎯 Create Account'; return; }
       loginUser({username:uname, pullsLeft:d.pullsLeft||40, cooldownLeft:d.cooldownLeft||0, collection:[]});
     } else {
-      const r = await fetch(`${API}/api/users/${encodeURIComponent(uname)}`);
+      const r = await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,password:pwd})});
       const d = await r.json();
-      if (!r.ok) { setAuthError('Username not found'); btn.disabled=false; btn.textContent='🔓 Log In'; return; }
+      if (!r.ok) { setAuthError(d.error); btn.disabled=false; btn.textContent='🔓 Log In'; return; }
       loginUser({username:uname, pullsLeft:d.pullsLeft||40, cooldownLeft:d.cooldownLeft||0, collection:d.collection||[]});
     }
   } catch(e) {
-    setAuthError('Server unavailable');
+    setAuthError('Server unavailable — try again');
     btn.disabled=false;
     btn.textContent = authTab==='register' ? '🎯 Create Account' : '🔓 Log In';
   }
@@ -943,9 +954,13 @@ function loginUser(data) {
 function logout() {
   currentUser = null;
   localStorage.removeItem('bw_user');
+  collection = [];
+  localStorage.removeItem('bw_collection');
   updateNavUser();
   pullsLeft = 40;
   updatePullsUI();
+  renderCollection();
+  updateLockerBadge();
 }
 
 function updateNavUser() {
@@ -1198,6 +1213,10 @@ function renderCollection() {
   const badge= document.getElementById('lockerBadge');
   const filt = collFilter==='all' ? collection : collection.filter(c=>c.rarity===collFilter);
   badge.textContent = `${collection.length} card${collection.length!==1?'s':''}`;
+  if (!currentUser) {
+    grid.innerHTML=`<div class="empty-coll"><div style="font-size:2rem;margin-bottom:.5rem;">🔒</div><div><a onclick="openAuthModal('register')" style="color:var(--blue);cursor:pointer;font-weight:700;">Sign up or log in</a> to see your cards.</div></div>`;
+    return;
+  }
   if (!filt.length) {
     grid.innerHTML=collection.length
       ?`<div class="empty-coll"><div>🔍</div><div style="margin-top:.4rem;">No ${collFilter} cards yet.</div></div>`
@@ -1293,7 +1312,7 @@ function showLegToast(text) {
   const t=document.getElementById('leg-toast');
   document.getElementById('legToastText').textContent=text;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),4000);
+  setTimeout(()=>t.classList.remove('show'),7000);
 }
 
 /* ═══════════════════════════════════════════════
@@ -1384,26 +1403,57 @@ function hashColor(str) {
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+let chatSending=false;
+let chatCdTimer=null;
+
 async function sendChatMsg() {
   if(!currentUser){openAuthModal('register');return;}
+  if(chatSending) return;
   const input=document.getElementById('chatInput');
   const text=input.value.trim();
-  if(!text && !pendingGif && !pendingFlexCard) return;
-  const btn=document.querySelector('.btn-chat-send');
-  btn.disabled=true;
+  if(!text && !pendingFlexCard) return;
+  chatSending=true;
+  const btn=document.getElementById('chatSendBtn');
+  btn.disabled=true; btn.textContent='Sending...';
   try {
     const r=await fetch(`${API}/api/chat`,{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Username':currentUser.username},
-      body:JSON.stringify({text, gif:pendingGif, card:pendingFlexCard, username:currentUser.username})
+      body:JSON.stringify({text, card:pendingFlexCard, username:currentUser.username})
     });
+    const d=await r.json();
     if(r.ok){
       input.value='';
       clearAttachment();
       await loadChat(false);
+      // Start 20s cooldown UI
+      startChatCooldown(20);
+    } else if(r.status===429){
+      startChatCooldown(d.cooldown||20);
     }
   } catch(e){}
+  chatSending=false;
+  btn.textContent='Send';
   btn.disabled=false;
+}
+
+function startChatCooldown(sec) {
+  const bar=document.getElementById('chatCooldownBar');
+  const num=document.getElementById('chatCooldownSec');
+  const btn=document.getElementById('chatSendBtn');
+  bar.style.display='block'; btn.disabled=true;
+  let left=sec;
+  num.textContent=left;
+  if(chatCdTimer) clearInterval(chatCdTimer);
+  chatCdTimer=setInterval(()=>{
+    left--;
+    num.textContent=left;
+    if(left<=0){
+      clearInterval(chatCdTimer);
+      bar.style.display='none';
+      btn.disabled=false;
+    }
+  },1000);
 }
 
 async function upvoteMsg(msgId, btn) {
