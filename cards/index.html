@@ -464,15 +464,16 @@
 
     /* Legendary chat alert toast */
     #leg-toast{
-      position:fixed;top:5rem;left:50%;transform:translateX(-50%) translateY(-80px);
+      position:fixed;top:5rem;left:50%;transform:translateX(-50%);
       z-index:700;background:linear-gradient(135deg,#1a1000,#2a1a00);
       border:2px solid rgba(245,197,66,.7);border-radius:14px;
-      padding:.75rem 1.5rem;display:flex;align-items:center;gap:.75rem;
+      padding:.75rem 1.5rem;align-items:center;gap:.75rem;
       box-shadow:0 0 30px rgba(245,197,66,.4);
-      transition:transform .5s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
-      max-width:90vw;
+      pointer-events:none;max-width:90vw;
+      display:none;opacity:0;
     }
-    #leg-toast.show{transform:translateX(-50%) translateY(0);}
+    @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+    @keyframes toastOut{from{opacity:1;}to{opacity:0;}}
     #leg-toast .lt-icon{font-size:1.4rem;}
     #leg-toast .lt-text{font-size:.85rem;font-weight:700;color:var(--gold);}
 
@@ -1402,11 +1403,17 @@ function launchLegendaryEffect() {
 }
 
 function showLegToast(text) {
+  if (!text) return;
   playDing(false);
-  const t=document.getElementById('leg-toast');
-  document.getElementById('legToastText').textContent=text;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),7000);
+  const t = document.getElementById('leg-toast');
+  document.getElementById('legToastText').textContent = text;
+  t.style.display = 'flex';
+  t.style.animation = 'toastIn .4s ease both';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => {
+    t.style.animation = 'toastOut .4s ease both';
+    setTimeout(() => { t.style.display = 'none'; t.style.animation = ''; }, 400);
+  }, 7000);
 }
 
 /* ═══════════════════════════════════════════════

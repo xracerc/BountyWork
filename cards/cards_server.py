@@ -339,6 +339,9 @@ class Handler(BaseHTTPRequestHandler):
                 since = p.split("since=")[1].split("&")[0]
             if since:
                 msgs = [m for m in msgs if m.get("timestamp","") > since]
+            # On initial load (no since=), strip legendary alerts from history
+            if not since:
+                msgs = [m for m in msgs if m.get("type") != "legendary_alert"]
             self.json_resp(200,{"messages": msgs[-50:]})
 
         # ── Static files ────────────────────────────────────────
