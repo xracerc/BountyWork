@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bountywork | $Bountywork on Solana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --blue:    #4a9eff;
+      --blue2:   #1a6aff;
+      --blue3:   #0a3aaa;
+      --glow:    rgba(74,158,255,0.55);
+      --bg:      #060d18;
+      --bg2:     #0a1525;
+      --bg3:     #0f1d35;
+      --text:    #e8f4ff;
+      --muted:   #6a90b8;
+      --border:  rgba(74,158,255,0.18);
+      --white:   #ffffff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── CANVAS ── */
+    #particles { position:fixed; inset:0; pointer-events:none; z-index:0; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:100;
+      display: flex; align-items:center; justify-content:space-between;
+      padding: 1rem 2rem;
+      background: rgba(6,13,24,0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display:flex; align-items:center; gap:0.6rem;
+      text-decoration:none;
+      font-family: 'Anton', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      color: white;
+      text-shadow: 0 0 20px var(--glow);
+    }
+    .logo-badge {
+      width:36px; height:36px;
+      background: linear-gradient(135deg, #fff 0%, #a8d4ff 100%);
+      border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Anton',sans-serif;
+      font-size:1.1rem; color:#06101e;
+      box-shadow: 0 0 16px var(--glow);
+    }
+    .nav-links { display:flex; gap:1.5rem; list-style:none; }
+    .nav-links a {
+      color: var(--muted); text-decoration:none;
+      font-size:0.9rem; font-weight:600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: white; }
+    .nav-links a.highlight { color: var(--blue); }
+    .btn-nav {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue2) 100%);
+      color: white; font-weight:800; font-size:0.88rem;
+      padding:0.5rem 1.2rem; border-radius:8px;
+      text-decoration:none;
+      box-shadow: 0 4px 20px rgba(74,158,255,0.35);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-nav:hover { opacity:0.85; transform:translateY(-1px); }
+
+    /* ── HERO ── */
+    #hero {
+      position:relative; z-index:1;
+      min-height:100vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      text-align:center;
+      padding: 8rem 1.5rem 4rem;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(74,158,255,0.1) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 80%, rgba(26,106,255,0.06) 0%, transparent 50%);
+    }
+
+    .live-badge {
+      display:inline-flex; align-items:center; gap:0.5rem;
+      border: 1.5px solid rgba(74,158,255,0.35);
+      background: rgba(74,158,255,0.08);
+      border-radius:999px;
+      padding: 0.35rem 1rem;
+      font-size:0.78rem; font-weight:700;
+      color: var(--blue);
+      letter-spacing:0.08em; text-transform:uppercase;
+      margin-bottom: 2rem;
+      animation: fadein 0.6s ease both;
+    }
+    .live-dot {
+      width:8px; height:8px; border-radius:50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      animation: blink 1.8s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── 3D COIN ── */
+    .hero-coin {
+      width:160px; height:160px;
+      border-radius:50%;
+      background: radial-gradient(circle at 35% 30%, #ffffff 0%, #c0d8ff 40%, #4a9eff 80%, #0a3aaa 100%);
+      display:flex; align-items:center; justify-content:center;
+      font-size:4rem;
+      margin: 0 auto 2.5rem;
+      box-shadow:
+        0 0 0 6px rgba(74,158,255,0.15),
+        0 0 40px rgba(74,158,255,0.5),
+        0 0 100px rgba(74,158,255,0.2),
+        inset 0 -20px 40px rgba(0,0,0,0.3);
+      animation: float 3s ease-in-out infinite, fadein 0.8s ease both;
+      position:relative;
+    }
+    .hero-coin::after {
+      content:'';
+      position:absolute; inset:-10px;
+      border-radius:50%;
+      border: 2px solid rgba(74,158,255,0.3);
+      animation: pulse-ring 2.5s ease-in-out infinite;
+    }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+    @keyframes pulse-ring { 0%,100%{transform:scale(1);opacity:0.5} 50%{transform:scale(1.1);opacity:0.15} }
+    @keyframes fadein { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── 3D TITLE ── */
+    .hero-title {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(3.5rem, 10vw, 7rem);
+      letter-spacing: 0.03em;
+      color: white;
+      -webkit-text-stroke: 3px #001840;
+      text-stroke: 3px #001840;
+      text-shadow:
+        3px 3px 0 #001030,
+        6px 6px 0 #000820,
+        0 0 30px rgba(74,158,255,0.8),
+        0 0 70px rgba(74,158,255,0.4),
+        0 0 120px rgba(74,158,255,0.2);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+      animation: fadein 0.9s 0.1s ease both;
+    }
+    .hero-ticker {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      color: var(--blue);
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 20px var(--glow);
+      margin-bottom: 1.5rem;
+      animation: fadein 0.9s 0.2s ease both;
+    }
+    .hero-sub {
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      color: var(--muted);
+      max-width: 500px; line-height:1.7;
+      margin: 0 auto 2.5rem;
+      animation: fadein 0.9s 0.3s ease both;
+    }
+
+    .hero-btns {
+      display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;
+      margin-bottom: 3rem;
+      animation: fadein 0.9s 0.4s ease both;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: white; font-weight:800; font-size:1rem;
+      padding: 0.9rem 2.2rem; border-radius:12px;
+      text-decoration:none;
+      box-shadow: 0 4px 28px rgba(74,158,255,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 36px rgba(74,158,255,0.6); }
+    .btn-secondary {
+      background:transparent; color:white; font-weight:700; font-size:1rem;
+      padding: 0.9rem 2.2rem; border-radius:12px; text-decoration:none;
+      border: 1.5px solid rgba(74,158,255,0.4);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .btn-secondary:hover { border-color:var(--blue); transform:translateY(-2px); }
+
+    .ca-box {
+      display:inline-flex; align-items:center; gap:0.75rem;
+      background: rgba(74,158,255,0.06);
+      border: 1px solid var(--border);
+      border-radius:12px;
+      padding: 0.7rem 1.25rem;
+      font-family:monospace; font-size:clamp(0.6rem,1.5vw,0.78rem);
+      color: var(--muted);
+      cursor:pointer; word-break:break-all;
+      animation: fadein 0.9s 0.5s ease both;
+      transition: border-color 0.2s;
+    }
+    .ca-box:hover { border-color:var(--blue); color:white; }
+    .ca-label { color:var(--blue); font-weight:700; font-size:0.72rem; white-space:nowrap; }
+    .copy-btn {
+      background: rgba(74,158,255,0.15); border:none; color:var(--blue);
+      border-radius:6px; padding:0.28rem 0.6rem;
+      font-size:0.72rem; cursor:pointer; white-space:nowrap;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover { background:rgba(74,158,255,0.3); }
+
+    /* ── TICKER TAPE ── */
+    .ticker-wrap {
+      position:relative; z-index:1; overflow:hidden;
+      background:rgba(74,158,255,0.05);
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+      padding: 0.65rem 0;
+    }
+    .ticker-inner {
+      display:flex; gap:3rem;
+      animation: ticker 18s linear infinite;
+      white-space:nowrap; width:max-content;
+    }
+    .ticker-item { font-size:0.78rem; font-weight:700; color:var(--blue); letter-spacing:0.08em; }
+    @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ── STATS ── */
+    #stats { position:relative; z-index:1; padding:3rem 1.5rem; }
+    .stats-grid {
+      max-width:900px; margin:0 auto;
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:1.25rem;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius:16px; padding:1.5rem;
+      text-align:center;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      border-color: var(--blue);
+      transform:translateY(-4px);
+      box-shadow: 0 8px 28px rgba(74,158,255,0.12);
+    }
+    .stat-value {
+      font-family:'Anton',sans-serif;
+      font-size:2rem; color:white;
+      text-shadow: 0 0 16px var(--glow);
+      line-height:1; margin-bottom:0.4rem;
+    }
+    .stat-label { font-size:0.82rem; color:var(--muted); font-weight:600; }
+
+    /* ── SHARED ── */
+    section { position:relative; z-index:1; }
+    .section-inner { max-width:1000px; margin:0 auto; padding:5rem 1.5rem; }
+    .section-tag {
+      font-size:0.72rem; font-weight:700; letter-spacing:0.12em;
+      text-transform:uppercase; color:var(--blue); margin-bottom:0.75rem;
+    }
+    .section-title {
+      font-family:'Anton',sans-serif;
+      font-size:clamp(2rem,5vw,3.5rem);
+      letter-spacing:0.03em; line-height:1;
+      color:white;
+      text-shadow:
+        2px 2px 0 #001030,
+        0 0 24px rgba(74,158,255,0.5);
+      margin-bottom:1rem;
+    }
+    .section-sub { color:var(--muted); font-size:1rem; line-height:1.75; max-width:580px; }
+
+    /* ── ABOUT ── */
+    #about .section-inner {
+      display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center;
+    }
+    .about-visual { display:flex; align-items:center; justify-content:center; }
+    .coin-3d {
+      width:220px; height:220px;
+      border-radius:50%;
+      background: radial-gradient(circle at 35% 30%, #ffffff 0%, #c0d8ff 35%, #4a9eff 70%, #0a3aaa 100%);
+      box-shadow:
+        0 0 0 8px rgba(74,158,255,0.1),
+        0 0 50px rgba(74,158,255,0.4),
+        0 0 100px rgba(74,158,255,0.15),
+        inset 0 -30px 50px rgba(0,0,0,0.3);
+      display:flex; align-items:center; justify-content:center;
+      font-size:6rem;
+      animation: float 4s ease-in-out infinite;
+    }
+    .about-features { display:flex; flex-direction:column; gap:1rem; margin-top:2rem; }
+    .feature-item { display:flex; align-items:flex-start; gap:0.75rem; }
+    .feature-icon {
+      width:36px; height:36px; min-width:36px;
+      background:rgba(74,158,255,0.1);
+      border:1px solid var(--border);
+      border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem;
+    }
+    .feature-text strong { display:block; font-weight:700; font-size:0.95rem; margin-bottom:0.2rem; }
+    .feature-text span { font-size:0.85rem; color:var(--muted); line-height:1.5; }
+
+    /* ── HOW TO BUY ── */
+    #buy { background:linear-gradient(180deg,transparent 0%,var(--bg2) 20%,var(--bg2) 80%,transparent 100%); }
+    .steps-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:1.5rem; margin-top:3rem;
+    }
+    .step-card {
+      background:var(--bg3); border:1px solid var(--border);
+      border-radius:16px; padding:2rem 1.5rem;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .step-card:hover {
+      border-color:var(--blue); transform:translateY(-4px);
+      box-shadow:0 8px 28px rgba(74,158,255,0.12);
+    }
+    .step-num {
+      width:48px; height:48px;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Anton',sans-serif; font-size:1.4rem; color:white;
+      margin-bottom:1.25rem;
+      box-shadow:0 4px 16px rgba(74,158,255,0.35);
+    }
+    .step-card h3 { font-size:1.05rem; font-weight:700; margin-bottom:0.5rem; }
+    .step-card p { font-size:0.875rem; color:var(--muted); line-height:1.6; }
+    .step-card a { color:var(--blue); text-decoration:none; }
+    .step-card a:hover { text-decoration:underline; }
+
+    /* ── TOKENOMICS ── */
+    #tokenomics .section-inner { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start; }
+    .token-table { width:100%; border-collapse:collapse; margin-top:1.5rem; }
+    .token-table tr { border-bottom:1px solid var(--border); }
+    .token-table td { padding:0.9rem 0; font-size:0.95rem; }
+    .token-table td:first-child { color:var(--muted); }
+    .token-table td:last-child { font-weight:700; text-align:right; }
+    .donut-wrap { display:flex; flex-direction:column; align-items:center; gap:1.5rem; padding-top:1rem; }
+    svg.donut { overflow:visible; }
+    .donut-legend { display:flex; flex-direction:column; gap:0.6rem; width:100%; }
+    .legend-item { display:flex; align-items:center; gap:0.6rem; font-size:0.875rem; }
+    .legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .legend-label { color:var(--muted); flex:1; }
+    .legend-val { font-weight:700; }
+
+    /* ── COMMUNITY ── */
+    #community { text-align:center; }
+    .social-grid { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:2.5rem; }
+    .social-card {
+      display:flex; align-items:center; gap:0.75rem;
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:14px; padding:1rem 1.5rem;
+      text-decoration:none; color:var(--text);
+      font-weight:600; font-size:0.95rem;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .social-card:hover {
+      border-color:var(--blue); transform:translateY(-3px);
+      box-shadow:0 8px 24px rgba(74,158,255,0.15);
+    }
+    .s-icon { font-size:1.3rem; }
+
+    /* ── BOUNTY CTA SECTION ── */
+    #bounty-cta {
+      position:relative; z-index:1;
+      padding: 3rem 1.5rem;
+    }
+    .bounty-cta-inner {
+      max-width:800px; margin:0 auto;
+      background: linear-gradient(135deg, rgba(74,158,255,0.1) 0%, rgba(26,106,255,0.06) 100%);
+      border:1.5px solid var(--border);
+      border-radius:24px;
+      padding: 3rem 2rem;
+      text-align:center;
+      box-shadow: 0 0 60px rgba(74,158,255,0.06);
+    }
+    .bounty-cta-inner h2 {
+      font-family:'Anton',sans-serif;
+      font-size:clamp(1.8rem,4vw,3rem);
+      color:white;
+      text-shadow: 0 0 20px var(--glow);
+      margin-bottom:0.75rem;
+    }
+    .bounty-cta-inner p { color:var(--muted); margin-bottom:1.5rem; line-height:1.7; }
+
+    /* ── FOOTER ── */
+    footer {
+      position:relative; z-index:1;
+      border-top:1px solid var(--border);
+      padding:2rem 1.5rem;
+      text-align:center; color:var(--muted); font-size:0.82rem;
+    }
+    .footer-ca { font-family:monospace; color:var(--blue); font-size:0.72rem; margin-top:0.4rem; word-break:break-all; }
+    .disclaimer { margin-top:1rem; font-size:0.72rem; color:#334; max-width:600px; margin-left:auto; margin-right:auto; line-height:1.5; }
+
+    /* ── TOAST ── */
+    #toast {
+      position:fixed; bottom:2rem; left:50%;
+      transform:translateX(-50%) translateY(80px);
+      background:var(--blue); color:white;
+      font-weight:800; padding:0.7rem 1.6rem;
+      border-radius:999px; font-size:0.88rem;
+      z-index:999; pointer-events:none;
+      transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow:0 4px 20px rgba(74,158,255,0.5);
+    }
+    #toast.show { transform:translateX(-50%) translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:700px) {
+      #about .section-inner, #tokenomics .section-inner { grid-template-columns:1fr; gap:2.5rem; }
+      .about-visual { display:none; }
+      nav { padding:0.85rem 1rem; }
+      .nav-links { display:none; }
+    }
+  </style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div id="toast">Copied!</div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="logo-badge">B</div>
+    BOUNTYWORK
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#buy">How to Buy</a></li>
+    <li><a href="#tokenomics">Tokenomics</a></li>
+    <li><a href="#community">Community</a></li>
+    <li><a href="bounties.html" class="highlight">🎯 Bounties</a></li>
+    <li><a class="btn-nav" href="https://pump.fun/coin/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank" rel="noopener">Buy $Bountywork</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="live-badge"><div class="live-dot"></div>Live on Pump.fun &nbsp;·&nbsp; Solana</div>
+  <div class="hero-coin">🎯</div>
+  <h1 class="hero-title">BOUNTYWORK</h1>
+  <p class="hero-ticker">$BOUNTYWORK</p>
+  <p class="hero-sub">The memecoin with a mission. Hunt bounties, earn bags, ride the wave. Built on Solana — fast, cheap, unstoppable.</p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="https://pump.fun/coin/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank" rel="noopener">🚀 Buy on Pump.fun</a>
+    <a class="btn-secondary" href="bounties.html">🎯 View Bounties</a>
+  </div>
+  <div class="ca-box" onclick="copyCA()">
+    <span class="ca-label">CA</span>
+    <span id="ca-text">J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump</span>
+    <button class="copy-btn" onclick="event.stopPropagation();copyCA()">Copy</button>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-inner" id="tickerInner"></div>
+</div>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-value">SOL</div><div class="stat-label">Network</div></div>
+    <div class="stat-card"><div class="stat-value">1B</div><div class="stat-label">Total Supply</div></div>
+    <div class="stat-card"><div class="stat-value">0%</div><div class="stat-label">Tax</div></div>
+    <div class="stat-card"><div class="stat-value">🔒</div><div class="stat-label">LP on Pump.fun</div></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner">
+    <div>
+      <p class="section-tag">About</p>
+      <h2 class="section-title">WHAT IS BOUNTYWORK?</h2>
+      <p class="section-sub">Bountywork is a community-driven memecoin on Solana. Inspired by the grind of the hunt — where every degen is a bounty hunter chasing the next 100x. Fast transactions, zero taxes, and a community that never stops.</p>
+      <div class="about-features">
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-text"><strong>Solana Speed</strong><span>Sub-second transactions and near-zero fees.</span></div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-text"><strong>Community First</strong><span>No VC allocation, no team wallet. 100% fair launch.</span></div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔥</div>
+          <div class="feature-text"><strong>Zero Tax</strong><span>Buy and sell with no hidden fees or transfer taxes.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="about-visual">
+      <div class="coin-3d">🎯</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO BUY -->
+<section id="buy">
+  <div class="section-inner">
+    <p class="section-tag">How to Buy</p>
+    <h2 class="section-title">GET $BOUNTYWORK IN 4 STEPS</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Get a Wallet</h3>
+        <p>Download <a href="https://phantom.app" target="_blank" rel="noopener">Phantom</a> or <a href="https://solflare.com" target="_blank" rel="noopener">Solflare</a> — the best Solana wallets on mobile and desktop.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Fund with SOL</h3>
+        <p>Buy SOL from any exchange (Coinbase, Binance, Kraken) and transfer it to your wallet address.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Go to Pump.fun</h3>
+        <p>Visit <a href="https://pump.fun/coin/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank" rel="noopener">pump.fun</a> and connect your wallet. Search for Bountywork or paste the CA.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h3>Swap for $Bountywork</h3>
+        <p>Enter the SOL amount to swap, confirm the transaction, and welcome to the hunt! 🎯</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOKENOMICS -->
+<section id="tokenomics">
+  <div class="section-inner">
+    <div>
+      <p class="section-tag">Tokenomics</p>
+      <h2 class="section-title">SIMPLE & FAIR SUPPLY</h2>
+      <p class="section-sub">No tricks. No hidden allocations. Just a clean community-owned token.</p>
+      <table class="token-table">
+        <tr><td>Token Name</td><td>Bountywork</td></tr>
+        <tr><td>Symbol</td><td>$Bountywork</td></tr>
+        <tr><td>Network</td><td>Solana</td></tr>
+        <tr><td>Total Supply</td><td>1,000,000,000</td></tr>
+        <tr><td>Tax</td><td>0% / 0%</td></tr>
+        <tr><td>Team Allocation</td><td>0%</td></tr>
+        <tr><td>Liquidity</td><td>100% on Pump.fun</td></tr>
+      </table>
+    </div>
+    <div class="donut-wrap">
+      <svg class="donut" width="200" height="200" viewBox="0 0 200 200">
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="#4a9eff" stroke-width="28"
+          stroke-dasharray="502.65 628.3" stroke-dashoffset="157" filter="url(#glow)"/>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="#1a6aff" stroke-width="28"
+          stroke-dasharray="125.66 628.3" stroke-dashoffset="-345.65"/>
+        <text x="100" y="95" text-anchor="middle" fill="#e8f4ff" font-size="20" font-weight="900">1B</text>
+        <text x="100" y="116" text-anchor="middle" fill="#6a90b8" font-size="11">Total Supply</text>
+      </svg>
+      <div class="donut-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#4a9eff"></div><span class="legend-label">Liquidity Pool</span><span class="legend-val">80%</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a6aff"></div><span class="legend-label">Community / Presale</span><span class="legend-val">20%</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOUNTY CTA -->
+<section id="bounty-cta">
+  <div class="bounty-cta-inner">
+    <h2>🎯 EARN $BOUNTYWORK</h2>
+    <p>Complete community tasks and get rewarded in $Bountywork. Memes, videos, tweets, dev work — there's a bounty for everyone.</p>
+    <a class="btn-primary" href="bounties.html">View All Bounties</a>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section id="community">
+  <div class="section-inner" style="text-align:center">
+    <p class="section-tag">Community</p>
+    <h2 class="section-title">JOIN THE HUNT</h2>
+    <p class="section-sub" style="margin:0 auto">Every bounty hunter needs a crew. Join and be part of something wild.</p>
+    <div class="social-grid">
+      <a class="social-card" href="https://x.com/ayushquantt" target="_blank" rel="noopener"><span class="s-icon">𝕏</span> Follow on X</a>
+      <a class="social-card" href="https://pump.fun/coin/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank" rel="noopener"><span class="s-icon">🚀</span> Trade on Pump.fun</a>
+      <a class="social-card" href="https://dexscreener.com/solana/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank" rel="noopener"><span class="s-icon">📊</span> DexScreener</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>© 2025 Bountywork &nbsp;·&nbsp; Built on Solana</div>
+  <div class="footer-ca">CA: J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump</div>
+  <div class="disclaimer">$Bountywork is a memecoin with no intrinsic value or expectation of financial return. Cryptocurrency is highly volatile. Do your own research. Never invest more than you can afford to lose.</div>
+</footer>
+
+<script>
+// PARTICLES
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let W, H, dots = [];
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', () => { resize(); init(); });
+function init() {
+  dots = Array.from({length:55}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    r: Math.random()*1.5+0.3,
+    dx: (Math.random()-0.5)*0.25, dy: (Math.random()-0.5)*0.25,
+    a: Math.random()*0.4+0.1,
+  }));
+}
+init();
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  dots.forEach(d => {
+    ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(74,158,255,${d.a})`; ctx.fill();
+    d.x+=d.dx; d.y+=d.dy;
+    if(d.x<0||d.x>W) d.dx*=-1;
+    if(d.y<0||d.y>H) d.dy*=-1;
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+
+// COPY CA
+function copyCA() {
+  navigator.clipboard.writeText('J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump').then(() => {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  });
+}
+
+// TICKER
+const items = ['🎯 $BOUNTYWORK','🚀 ON SOLANA','⚡ ZERO TAX','🔥 FAIR LAUNCH','💰 PUMP.FUN','🎯 HUNT THE BAGS','🟢 LIVE NOW'];
+const doubled = [...items,...items];
+document.getElementById('tickerInner').innerHTML = doubled.map(i=>`<span class="ticker-item">${i}</span>`).join('');
+
+// SCROLL FADE IN
+const observer = new IntersectionObserver(entries => entries.forEach(e => {
+  if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+}), {threshold:0.1});
+document.querySelectorAll('.step-card,.stat-card,.feature-item').forEach(el => {
+  el.style.opacity='0'; el.style.transform='translateY(20px)';
+  el.style.transition='opacity 0.5s ease,transform 0.5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>

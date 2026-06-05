@@ -1,0 +1,285 @@
+{
+  "version": 2,
+  "lastUpdated": "2026-06-05T14:34:13.038730+00:00",
+  "bounties": [
+    {
+      "id": 1,
+      "cat": "social",
+      "title": "Tweet About $Bountywork",
+      "desc": "Post a tweet about $Bountywork with the contract address and at least 2 relevant hashtags. Must have a real account with 50+ followers.",
+      "reward": 50000,
+      "diff": "easy",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 2,
+      "cat": "video",
+      "title": "Post a TikTok About $Bountywork",
+      "desc": "Create and post a TikTok video about $Bountywork. Minimum 15 seconds, must include the CA in the caption.",
+      "reward": 150000,
+      "diff": "medium",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 3,
+      "cat": "design",
+      "title": "Create a $Bountywork Meme",
+      "desc": "Design a dank, shareable meme featuring $Bountywork. Must be original and reference the bounty hunter theme. Upload to imgur and share link.",
+      "reward": 30000,
+      "diff": "easy",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 4,
+      "cat": "social",
+      "title": "Write a Thread on X",
+      "desc": "Write an informative thread (minimum 5 tweets) about $Bountywork covering what it is, how to buy, and why it's a gem. Must be public.",
+      "reward": 100000,
+      "diff": "medium",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 5,
+      "cat": "design",
+      "title": "Create a Telegram Sticker Pack",
+      "desc": "Design a set of at least 5 Telegram stickers featuring the $Bountywork theme. Submit the sticker pack link as proof.",
+      "reward": 200000,
+      "diff": "hard",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 6,
+      "cat": "community",
+      "title": "Refer 5 New Buyers",
+      "desc": "Get 5 new people to buy $Bountywork. Have them include your wallet address in their claim so we can verify. Screenshots required.",
+      "reward": 300000,
+      "diff": "hard",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 7,
+      "cat": "video",
+      "title": "Make a YouTube Short",
+      "desc": "Post a YouTube Short (60 seconds or less) about $Bountywork. Must include the CA in the description. Link required as proof.",
+      "reward": 175000,
+      "diff": "medium",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 8,
+      "cat": "dev",
+      "title": "Build a $Bountywork Price Bot",
+      "desc": "Build and deploy a Telegram or Discord bot that shows live $Bountywork price, market cap, and volume. Share bot link + GitHub repo.",
+      "reward": 750000,
+      "diff": "hard",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 9,
+      "cat": "design",
+      "title": "Design a $Bountywork Banner",
+      "desc": "Create a banner/cover image for the $Bountywork Twitter/X profile and Telegram group. PNG at 1500x500px minimum.",
+      "reward": 40000,
+      "diff": "easy",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 10,
+      "cat": "community",
+      "title": "Post on Reddit",
+      "desc": "Post about $Bountywork in a relevant subreddit (r/SolanaMemeCoins, r/CryptoMoonShots, etc). Must reach 10 upvotes. Share the link.",
+      "reward": 75000,
+      "diff": "medium",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 11,
+      "cat": "social",
+      "title": "Tag 3 Crypto Influencers",
+      "desc": "Post a tweet tagging 3 crypto influencers (10K+ followers each) about $Bountywork. Must be engaging, not spammy.",
+      "reward": 60000,
+      "diff": "easy",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 12,
+      "cat": "dev",
+      "title": "Add $Bountywork to CoinGecko",
+      "desc": "Successfully submit and get $Bountywork listed on CoinGecko. Provide confirmation link and submission receipt.",
+      "reward": 1000000,
+      "diff": "hard",
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null
+    },
+    {
+      "id": 13,
+      "cat": "irl",
+      "title": "Shave Your Head",
+      "desc": "Shave your entire head on video for $Bountywork. Say the coin name at the end and post it publicly on X. No wigs, no tricks.",
+      "reward": 500000,
+      "diff": "hard",
+      "completed": true,
+      "pendingHunter": null,
+      "hunter": {
+        "name": "@ayushquantt",
+        "wallet": "J4x1...pump",
+        "proof": "https://x.com/ayushquantt/status/2062585750206525537"
+      }
+    },
+    {
+      "id": 14,
+      "cat": "irl",
+      "title": "Dunk Your Head in a Toilet",
+      "desc": "Fully dunk your head in a toilet on camera for $Bountywork. One take, no cuts. Post publicly and tag the community.",
+      "reward": 350000,
+      "diff": "hard",
+      "completed": true,
+      "pendingHunter": null,
+      "hunter": {
+        "name": "@ayushquantt",
+        "wallet": "J4x1...pump",
+        "proof": "https://x.com/ayushquantt/status/2062687785811587393"
+      }
+    },
+    {
+      "id": 15,
+      "cat": "irl",
+      "title": "Eat a Raw Egg",
+      "desc": "Crack and eat a full raw egg on camera in one take. No editing. Post the video with $Bountywork in the caption.",
+      "reward": 150000,
+      "diff": "medium",
+      "completed": true,
+      "pendingHunter": null,
+      "hunter": {
+        "name": "Community Hunter",
+        "wallet": "",
+        "proof": ""
+      }
+    },
+    {
+      "id": 16,
+      "cat": "irl",
+      "title": "Pour Powder on Yourself",
+      "desc": "Pour a full bag of powder (flour, protein powder, etc.) over your head on video. Post publicly.",
+      "reward": 200000,
+      "diff": "medium",
+      "completed": true,
+      "pendingHunter": null,
+      "hunter": {
+        "name": "@ayushquantt",
+        "wallet": "J4x1...pump",
+        "proof": "https://x.com/ayushquantt/status/2062663328246149169"
+      }
+    },
+    {
+      "id": 17,
+      "cat": "irl",
+      "title": "Shave Your Eyebrows",
+      "desc": "Shave off both eyebrows fully on camera for $Bountywork. Must be real. Post publicly.",
+      "reward": 400000,
+      "diff": "hard",
+      "completed": true,
+      "pendingHunter": null,
+      "hunter": {
+        "name": "@ayushquantt",
+        "wallet": "J4x1...pump",
+        "proof": "https://x.com/ayushquantt/status/2062662989589746140"
+      }
+    },
+    {
+      "cat": "dev",
+      "title": "Create a $BOUNTYWORK Auto-Buy Script",
+      "desc": "Write a public open-source script that auto-buys $BOUNTYWORK via Solana web3.js. GitHub required.",
+      "reward": 750000,
+      "diff": "hard",
+      "id": 18,
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null,
+      "createdAt": "2026-06-05T14:06:36.817208+00:00"
+    },
+    {
+      "cat": "irl",
+      "title": "Cold Shower for 5 Minutes",
+      "desc": "Cold water only, 5 straight minutes on camera. Shout '$BOUNTYWORK' at the end.",
+      "reward": 120000,
+      "diff": "medium",
+      "id": 19,
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null,
+      "createdAt": "2026-06-05T14:06:36.817236+00:00"
+    },
+    {
+      "cat": "irl",
+      "title": "Hold an Ice Cube for 2 Minutes",
+      "desc": "Hold an ice cube in your bare hand for 2 straight minutes on camera. No gloves, no cuts.",
+      "reward": 80000,
+      "diff": "easy",
+      "id": 20,
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null,
+      "createdAt": "2026-06-05T14:07:16.405292+00:00"
+    },
+    {
+      "cat": "social",
+      "title": "Post on 5 Different Platforms in One Day",
+      "desc": "Post $BOUNTYWORK content on X, TikTok, Reddit, Instagram, and YouTube in the same day.",
+      "reward": 250000,
+      "diff": "hard",
+      "id": 21,
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null,
+      "createdAt": "2026-06-05T14:07:16.405314+00:00"
+    },
+    {
+      "cat": "design",
+      "title": "Merch Concept Design",
+      "desc": "Design a $BOUNTYWORK T-shirt, hoodie, or cap concept with full mockup. Could become real merch!",
+      "reward": 200000,
+      "diff": "medium",
+      "id": 22,
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null,
+      "createdAt": "2026-06-05T14:34:13.038698+00:00"
+    },
+    {
+      "cat": "irl",
+      "title": "Get a $BOUNTYWORK Temp Tattoo",
+      "desc": "Get a $BOUNTYWORK temporary tattoo and film yourself showing it to a stranger in public.",
+      "reward": 80000,
+      "diff": "easy",
+      "id": 23,
+      "completed": false,
+      "hunter": null,
+      "pendingHunter": null,
+      "createdAt": "2026-06-05T14:34:13.038720+00:00"
+    }
+  ]
+}

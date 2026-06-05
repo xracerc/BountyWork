@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bountywork | Bounty Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --gold: #4a9eff;
+      --gold-dark: #1a6aff;
+      --orange: #1a6aff;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #4a9eff;
+      --purple: #a78bfa;
+      --bg: #060d18;
+      --bg2: #0a1525;
+      --bg3: #0f1d35;
+      --text: #e8f4ff;
+      --muted: #6a90b8;
+      --border: rgba(74,158,255,0.18);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10,10,15,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-family: 'Anton', sans-serif;
+      font-size: 1.35rem; letter-spacing: 0.05em;
+      color: white; text-decoration: none;
+      text-shadow: 0 0 18px rgba(74,158,255,0.5);
+    }
+    .logo-coin {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, #fff 0%, #a8d4ff 100%);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Anton', sans-serif;
+      font-size: 1rem; color: #06101e;
+      box-shadow: 0 0 14px rgba(74,158,255,0.4);
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-link {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.9rem; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--gold); }
+    .btn-nav {
+      background: linear-gradient(135deg, #4a9eff, #1a6aff);
+      color: white; font-weight: 800; font-size: 0.85rem;
+      padding: 0.45rem 1.1rem; border-radius: 8px;
+      text-decoration: none; border: none; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(74,158,255,0.35);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    /* ── HERO STRIP ── */
+    .hero-strip {
+      background: linear-gradient(135deg, rgba(245,197,66,0.07) 0%, rgba(255,123,0,0.05) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .hero-strip h1 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: 0.04em;
+      color: white;
+      -webkit-text-stroke: 2px #001840;
+      text-shadow:
+        2px 2px 0 #001030,
+        0 0 24px rgba(74,158,255,0.7),
+        0 0 60px rgba(74,158,255,0.3);
+      margin-bottom: 0.5rem;
+    }
+    .hero-strip p { color: var(--muted); font-size: 1rem; max-width: 520px; margin: 0 auto; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex; flex-wrap: wrap;
+      justify-content: center; gap: 1rem;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-chip {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      text-align: center;
+      min-width: 130px;
+    }
+    .stat-chip .sv { font-family: 'Anton', sans-serif; font-size: 1.5rem; color: white; text-shadow: 0 0 14px rgba(74,158,255,0.6); }
+    .stat-chip .sl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── FILTERS ── */
+    .filter-bar {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .tab {
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+    .tab:hover { border-color: var(--gold); color: var(--gold); }
+    .tab.active {
+      background: linear-gradient(135deg, var(--gold), var(--orange));
+      color: #000; border-color: transparent;
+    }
+    .cat-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .cat-tag {
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
+    }
+    .cat-tag.active { border-color: currentColor; }
+
+    /* ── BOUNTY GRID ── */
+    .board {
+      padding: 1.5rem 2rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ── BOUNTY CARD ── */
+    .bounty-card {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      display: flex; flex-direction: column;
+      gap: 1rem;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .bounty-card:hover {
+      border-color: rgba(245,197,66,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .bounty-card.completed {
+      opacity: 0.85;
+      border-color: rgba(34,197,94,0.3);
+    }
+    .bounty-card.completed::after {
+      content: '✓ COMPLETED';
+      position: absolute;
+      top: 14px; right: -28px;
+      background: var(--green);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 4px 36px;
+      transform: rotate(45deg);
+      letter-spacing: 0.05em;
+    }
+    .bounty-card.irl-card {
+      border-color: rgba(255,68,68,0.3);
+      background: linear-gradient(160deg, #0a1525 0%, #1a0808 100%);
+    }
+    .bounty-card.irl-card.completed {
+      border-color: rgba(34,197,94,0.4);
+      background: linear-gradient(160deg, #0a1525 0%, #0a1a0a 100%);
+      box-shadow: 0 0 20px rgba(34,197,94,0.06);
+    }
+    .bounty-card.irl-card:hover {
+      border-color: rgba(255,68,68,0.6);
+      box-shadow: 0 8px 32px rgba(255,68,68,0.1);
+    }
+
+    /* card header */
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+    .card-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1.5px solid;
+    }
+    /* categories */
+    .badge-social   { color: #3b82f6; border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.08); }
+    .badge-design   { color: #a855f7; border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.08); }
+    .badge-community{ color: #22c55e; border-color: rgba(34,197,94,0.4);  background: rgba(34,197,94,0.08);  }
+    .badge-dev      { color: #f97316; border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.08); }
+    .badge-video    { color: #ec4899; border-color: rgba(236,72,153,0.4); background: rgba(236,72,153,0.08); }
+    .badge-irl      { color: #ff4444; border-color: rgba(255,68,68,0.5);  background: rgba(255,68,68,0.1);   font-weight: 900; }
+    /* difficulty */
+    .diff-easy   { color: #22c55e; border-color: rgba(34,197,94,0.3);   background: rgba(34,197,94,0.06); }
+    .diff-medium { color: var(--gold); border-color: rgba(245,197,66,0.3); background: rgba(245,197,66,0.06); }
+    .diff-hard   { color: #ef4444; border-color: rgba(239,68,68,0.3);   background: rgba(239,68,68,0.06); }
+
+    /* status dot */
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .dot-open    { background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 2s infinite; }
+    .dot-pending { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: blink 1s infinite; }
+    .dot-done    { background: #555; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .bounty-card.pending-card {
+      border-color: rgba(245,158,11,0.3);
+      background: linear-gradient(160deg, #0a1525 0%, #1a1200 100%);
+    }
+    .bounty-card.pending-card::after {
+      content: '⏳ UNDER REVIEW';
+      position: absolute;
+      top: 14px; right: -32px;
+      background: #f59e0b;
+      color: #000;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 4px 40px;
+      transform: rotate(45deg);
+      letter-spacing: 0.05em;
+    }
+
+    /* card body */
+    .card-title { font-size: 1.05rem; font-weight: 800; line-height: 1.3; }
+    .card-desc  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+    /* reward */
+    .card-reward {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(245,197,66,0.06);
+      border: 1px solid rgba(245,197,66,0.15);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+    }
+    .reward-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+    .reward-amount { font-size: 1.1rem; font-weight: 900; color: var(--gold); }
+
+    /* hunter info (completed) */
+    .hunter-info {
+      display: flex; align-items: center; gap: 0.6rem;
+      background: rgba(34,197,94,0.06);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      font-size: 0.8rem;
+    }
+    .hunter-avatar {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--green), #16a34a);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 800; color: #000;
+      flex-shrink: 0;
+    }
+    .hunter-name { font-weight: 700; color: var(--green); }
+    .hunter-addr { color: var(--muted); font-family: monospace; font-size: 0.72rem; }
+
+    /* card footer */
+    .card-footer { display: flex; gap: 0.75rem; }
+    .btn-claim {
+      flex: 1;
+      background: linear-gradient(135deg, #4a9eff, #1a6aff);
+      color: #000; font-weight: 800; font-size: 0.9rem;
+      padding: 0.65rem;
+      border-radius: 10px;
+      border: none; cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-claim:hover { opacity: 0.9; transform: scale(1.02); box-shadow: 0 4px 20px rgba(74,158,255,0.4); }
+    .btn-claim:disabled {
+      background: #0f1d35;
+      color: #555;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      grid-column: 1/-1;
+    }
+    .empty-state .e-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 0.95rem; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 460px;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .modal-header h2 { font-size: 1.25rem; font-weight: 900; }
+    .modal-header .modal-reward {
+      font-size: 0.9rem; font-weight: 800; color: var(--gold);
+      background: rgba(245,197,66,0.1);
+      border: 1px solid rgba(245,197,66,0.25);
+      border-radius: 8px;
+      padding: 4px 10px;
+    }
+    .modal-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 1.3rem; cursor: pointer; line-height: 1;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .modal-desc {
+      font-size: 0.88rem; color: var(--muted);
+      line-height: 1.6; margin-bottom: 1.5rem;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+    .form-group label { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+    .form-group input, .form-group textarea {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: #444; }
+
+    .modal-footer { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+    .btn-cancel {
+      flex: 1; padding: 0.75rem;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-weight: 600; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
+    .btn-submit {
+      flex: 2; padding: 0.75rem;
+      background: linear-gradient(135deg, #4a9eff, #1a6aff);
+      border: none; border-radius: 10px;
+      color: #000; font-weight: 900; font-size: 0.95rem;
+      cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-submit:hover { opacity: 0.9; transform: scale(1.02); }
+
+    /* ── SUCCESS TOAST ── */
+    #toast {
+      position: fixed; bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #4a9eff; color: white;
+      font-weight: 800; padding: 0.8rem 1.8rem;
+      border-radius: 999px; font-size: 0.9rem;
+      box-shadow: 0 4px 20px rgba(74,158,255,0.5);
+      z-index: 999; pointer-events: none;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── ADD BOUNTY ADMIN ── */
+    .add-btn {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(245,197,66,0.1);
+      border: 1.5px dashed rgba(245,197,66,0.3);
+      border-radius: 999px;
+      padding: 0.45rem 1.1rem;
+      color: var(--gold); font-weight: 700; font-size: 0.85rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .add-btn:hover {
+      background: rgba(245,197,66,0.18);
+      border-color: var(--gold);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      nav { padding: 0.85rem 1rem; }
+      .board { padding: 1rem 1rem 3rem; }
+      .filter-bar { padding: 1rem; }
+      .stats-bar { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="logo-coin">B</div>
+    Bountywork
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="btn-nav" href="https://pump.fun/coin/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank">Buy $Bountywork</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-strip">
+  <h1>🎯 Bounty Board</h1>
+  <p>Complete tasks, earn $Bountywork. Every bounty completed grows the community.</p>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-chip"><div class="sv" id="stat-total">—</div><div class="sl">Total Bounties</div></div>
+  <div class="stat-chip"><div class="sv" id="stat-open">—</div><div class="sl">Open</div></div>
+  <div class="stat-chip"><div class="sv" id="stat-done">—</div><div class="sl">Completed</div></div>
+  <div class="stat-chip"><div class="sv" id="stat-rewards">—</div><div class="sl">Total Rewards Pool</div></div>
+</div>
+
+<!-- FILTERS -->
+<div class="filter-bar">
+  <div class="filter-tabs">
+    <button class="tab active" data-filter="all">All</button>
+    <button class="tab" data-filter="open">Open</button>
+    <button class="tab" data-filter="pending">⏳ Pending</button>
+    <button class="tab" data-filter="completed">Completed</button>
+  </div>
+  <div class="cat-filters">
+    <button class="cat-tag active" data-cat="all" style="color:#aaa;border-color:#333;">All Categories</button>
+    <button class="cat-tag" data-cat="social"    style="color:#3b82f6;">Social</button>
+    <button class="cat-tag" data-cat="design"    style="color:#a855f7;">Design</button>
+    <button class="cat-tag" data-cat="video"     style="color:#ec4899;">Video</button>
+    <button class="cat-tag" data-cat="community" style="color:#22c55e;">Community</button>
+    <button class="cat-tag" data-cat="dev"       style="color:#f97316;">Dev</button>
+    <button class="cat-tag" data-cat="irl"       style="color:#ff4444;">🔥 IRL</button>
+  </div>
+</div>
+
+<!-- BOARD -->
+<div class="board">
+  <div class="board-grid" id="grid"></div>
+</div>
+
+<!-- CLAIM MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="modalTitle">Claim Bounty</h2>
+        <div style="margin-top:4px; font-size:0.8rem; color:var(--muted);" id="modalCat"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="modal-reward" id="modalReward"></div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+
+    <div class="modal-desc" id="modalDesc"></div>
+
+    <div class="form-group">
+      <label>Your Name / Handle *</label>
+      <input type="text" id="inputName" placeholder="e.g. @cryptohunter" maxlength="50"/>
+    </div>
+    <div class="form-group">
+      <label>Solana Wallet Address *</label>
+      <input type="text" id="inputWallet" placeholder="e.g. 7xKX..." maxlength="44"/>
+    </div>
+    <div class="form-group">
+      <label>Proof Link (tweet, post, screenshot URL) *</label>
+      <input type="url" id="inputProof" placeholder="https://..."/>
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <textarea id="inputNotes" rows="2" placeholder="Anything extra you want to add..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-submit" onclick="submitClaim()">🎯 Submit Claim</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">🎯 Bounty claimed! Reward incoming.</div>
+
+<script>
+// ── DEFAULT BOUNTIES ──
+const DEFAULT_BOUNTIES = [
+  {
+    id: 1, cat: 'social', title: 'Tweet About $Bountywork',
+    desc: 'Post a tweet (now "X post") about $Bountywork with the contract address and at least 2 relevant hashtags. Must have a real account with 50+ followers.',
+    reward: 50000, diff: 'easy', completed: false, hunter: null
+  },
+  {
+    id: 2, cat: 'video', title: 'Post a TikTok About $Bountywork',
+    desc: 'Create and post a TikTok video about $Bountywork. Minimum 15 seconds, must include the CA in the caption. Share the link as proof.',
+    reward: 150000, diff: 'medium', completed: false, hunter: null
+  },
+  {
+    id: 3, cat: 'design', title: 'Create a $Bountywork Meme',
+    desc: 'Design a dank, shareable meme featuring $Bountywork. Must be original and reference the bounty hunter theme. Upload to imgur or similar and share the link.',
+    reward: 30000, diff: 'easy', completed: false, hunter: null
+  },
+  {
+    id: 4, cat: 'social', title: 'Write a Thread on X',
+    desc: 'Write an informative or hype thread (minimum 5 tweets) about $Bountywork covering what it is, how to buy, and why it\'s a good gem. Must be public.',
+    reward: 100000, diff: 'medium', completed: false, hunter: null
+  },
+  {
+    id: 5, cat: 'design', title: 'Create a Telegram Sticker Pack',
+    desc: 'Design a set of at least 5 Telegram stickers featuring the $Bountywork 🎯 theme. Submit the sticker pack link as proof.',
+    reward: 200000, diff: 'hard', completed: false, hunter: null
+  },
+  {
+    id: 6, cat: 'community', title: 'Refer 5 New Buyers',
+    desc: 'Get 5 new people to buy $Bountywork and have them include your wallet address in their claim submission so we can verify. Screenshots of their trades required.',
+    reward: 300000, diff: 'hard', completed: false, hunter: null
+  },
+  {
+    id: 7, cat: 'video', title: 'Make a YouTube Short',
+    desc: 'Post a YouTube Short (60 seconds or less) about $Bountywork. Must include the CA in the description. Link required as proof.',
+    reward: 175000, diff: 'medium', completed: false, hunter: null
+  },
+  {
+    id: 8, cat: 'dev', title: 'Build a $Bountywork Price Bot',
+    desc: 'Build and deploy a Telegram or Discord bot that shows live $Bountywork price, market cap, and volume. Must be publicly accessible. Share the bot link + GitHub repo.',
+    reward: 750000, diff: 'hard', completed: false, hunter: null
+  },
+  {
+    id: 9, cat: 'design', title: 'Design a $Bountywork Banner',
+    desc: 'Create a high-quality banner/cover image for the $Bountywork Twitter/X profile and Telegram group. Deliver as PNG at 1500×500px minimum.',
+    reward: 40000, diff: 'easy', completed: false, hunter: null
+  },
+  {
+    id: 10, cat: 'community', title: 'Post on Reddit',
+    desc: 'Post about $Bountywork in a relevant subreddit (r/SolanaMemeCoins, r/CryptoCurrency, r/CryptoMoonShots, etc). Must reach at least 10 upvotes. Share the link.',
+    reward: 75000, diff: 'medium', completed: false, hunter: null
+  },
+  {
+    id: 11, cat: 'social', title: 'Tag 3 Crypto Influencers',
+    desc: 'Post a tweet tagging 3 crypto influencers (each with 10K+ followers) about $Bountywork. The tweet must be engaging and not look like spam.',
+    reward: 60000, diff: 'easy', completed: false, hunter: null
+  },
+  {
+    id: 12, cat: 'dev', title: 'Add $Bountywork to CoinGecko',
+    desc: 'Successfully submit and get $Bountywork listed on CoinGecko. Provide confirmation link and your submission receipt.',
+    reward: 1000000, diff: 'hard', completed: false, hunter: null
+  },
+  // ── IRL CHALLENGES ──
+  {
+    id: 13, cat: 'irl', title: 'Shave Your Head',
+    desc: 'Shave your entire head on video for $Bountywork. Say the coin name at the end and post it publicly on X. No wigs, no tricks.',
+    reward: 500000, diff: 'hard', completed: true,
+    hunter: { name: '@ayushquantt', wallet: 'J4x1...pump', proof: 'https://x.com/ayushquantt/status/2062585750206525537' }
+  },
+  {
+    id: 14, cat: 'irl', title: 'Dunk Your Head in a Toilet',
+    desc: 'Fully dunk your head in a toilet on camera for $Bountywork. One take, no cuts. Post publicly and tag the community.',
+    reward: 350000, diff: 'hard', completed: true,
+    hunter: { name: '@ayushquantt', wallet: 'J4x1...pump', proof: 'https://x.com/ayushquantt/status/2062687785811587393' }
+  },
+  {
+    id: 15, cat: 'irl', title: 'Eat a Raw Egg',
+    desc: 'Crack and eat a full raw egg on camera in one take. No cutting, no editing. Post the video with $Bountywork in the caption.',
+    reward: 150000, diff: 'medium', completed: true,
+    hunter: { name: 'Community Hunter', wallet: '', proof: '' }
+  },
+  {
+    id: 16, cat: 'irl', title: 'Pour Powder on Yourself',
+    desc: 'Pour a full bag of powder (flour, protein powder, etc.) over your head on video. Must be outside or prepared to clean up. Post publicly.',
+    reward: 200000, diff: 'medium', completed: true,
+    hunter: { name: '@ayushquantt', wallet: 'J4x1...pump', proof: 'https://x.com/ayushquantt/status/2062663328246149169' }
+  },
+  {
+    id: 17, cat: 'irl', title: 'Shave Your Eyebrows',
+    desc: 'Shave off both eyebrows fully on camera for $Bountywork. Must be real — no drawing them back immediately after. Post publicly.',
+    reward: 400000, diff: 'hard', completed: true,
+    hunter: { name: '@ayushquantt', wallet: 'J4x1...pump', proof: 'https://x.com/ayushquantt/status/2062662989589746140' }
+  },
+];
+
+// ── STATE ──
+let bounties = [];
+let activeFilter = 'all';
+let activeCat = 'all';
+let claimingId = null;
+const USE_API = true; // Always try the API; falls back to localStorage if unavailable
+
+// ── DATA LAYER (API-first, localStorage fallback) ──
+async function loadBounties() {
+  if (USE_API) {
+    try {
+      const r = await fetch('/api/bounties');
+      if (r.ok) {
+        const data = await r.json();
+        bounties = data.bounties || [];
+        localStorage.setItem('bountywork_bounties_v2', JSON.stringify(bounties));
+        return;
+      }
+    } catch(e) { /* fall through */ }
+  }
+  // Fallback: localStorage → DEFAULT_BOUNTIES
+  try {
+    const saved = localStorage.getItem('bountywork_bounties_v2');
+    bounties = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_BOUNTIES));
+  } catch(e) {
+    bounties = JSON.parse(JSON.stringify(DEFAULT_BOUNTIES));
+  }
+}
+
+function saveLocal() {
+  localStorage.setItem('bountywork_bounties_v2', JSON.stringify(bounties));
+}
+
+// Poll for updates every 30s if there are pending bounties
+function startPolling() {
+  setInterval(async () => {
+    const hasPending = bounties.some(b => b.pendingHunter && !b.completed);
+    if (hasPending && USE_API) {
+      try {
+        const r = await fetch('/api/bounties');
+        if (r.ok) {
+          const data = await r.json();
+          bounties = data.bounties || [];
+          render();
+        }
+      } catch(e) {}
+    }
+  }, 30000);
+}
+
+// ── RENDER ──
+const CAT_LABEL  = { social:'Social', design:'Design', community:'Community', dev:'Dev', video:'Video', irl:'🔥 IRL Challenge' };
+const CAT_CLASS  = { social:'badge-social', design:'badge-design', community:'badge-community', dev:'badge-dev', video:'badge-video', irl:'badge-irl' };
+const DIFF_CLASS = { easy:'diff-easy', medium:'diff-medium', hard:'diff-hard' };
+const DIFF_EMOJI = { easy:'⚡', medium:'🔥', hard:'💀' };
+
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'') + 'M';
+  if (n >= 1000)    return (n/1000).toFixed(0) + 'K';
+  return n.toString();
+}
+
+function renderStats() {
+  const open    = bounties.filter(b => !b.completed && !b.pendingHunter).length;
+  const pending = bounties.filter(b => !b.completed && b.pendingHunter).length;
+  const done    = bounties.filter(b => b.completed).length;
+  const pool    = bounties.filter(b => !b.completed).reduce((s,b) => s + b.reward, 0);
+  document.getElementById('stat-total').textContent   = bounties.length;
+  document.getElementById('stat-open').textContent    = open;
+  document.getElementById('stat-done').textContent    = done;
+  document.getElementById('stat-rewards').textContent = fmt(pool) + ' $B';
+  // Update pending tab label
+  const pendingTab = document.querySelector('[data-filter="pending"]');
+  if (pendingTab) pendingTab.textContent = `⏳ Pending${pending ? ' ('+pending+')' : ''}`;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  const visible = bounties.filter(b => {
+    const isPending = !b.completed && b.pendingHunter;
+    const fOk =
+      activeFilter === 'all' ||
+      (activeFilter === 'open'      && !b.completed && !isPending) ||
+      (activeFilter === 'pending'   && isPending) ||
+      (activeFilter === 'completed' && b.completed);
+    const cOk = activeCat === 'all' || b.cat === activeCat;
+    return fOk && cOk;
+  });
+
+  if (!visible.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="e-icon">🔍</div><p>No bounties match this filter.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = visible.map(b => `
+    <div class="bounty-card ${b.completed ? 'completed' : ''} ${b.pendingHunter && !b.completed ? 'pending-card' : ''} ${b.cat === 'irl' ? 'irl-card' : ''}" id="card-${b.id}">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge ${CAT_CLASS[b.cat]}">${CAT_LABEL[b.cat]}</span>
+          <span class="badge ${DIFF_CLASS[b.diff]}">${DIFF_EMOJI[b.diff]} ${b.diff.charAt(0).toUpperCase()+b.diff.slice(1)}</span>
+        </div>
+        <div class="status-dot ${b.completed ? 'dot-done' : b.pendingHunter ? 'dot-pending' : 'dot-open'}" title="${b.completed ? 'Completed' : b.pendingHunter ? 'Under Review' : 'Open'}"></div>
+      </div>
+
+      <div>
+        <div class="card-title">${b.title}</div>
+        <div class="card-desc" style="margin-top:0.4rem">${b.desc}</div>
+      </div>
+
+      <div class="card-reward">
+        <div>
+          <div class="reward-label">Reward</div>
+          <div class="reward-amount">🎯 ${fmt(b.reward)} $Bountywork</div>
+        </div>
+        <div style="font-size:1.5rem">💰</div>
+      </div>
+
+      ${b.completed && b.hunter ? `
+        <div class="hunter-info">
+          <div class="hunter-avatar">${b.hunter.name.replace('@','').charAt(0).toUpperCase()}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="hunter-name">${escHtml(b.hunter.name)}</div>
+            ${b.hunter.wallet && b.hunter.wallet.length > 10 ? `<div class="hunter-addr">${escHtml(b.hunter.wallet.slice(0,6))}...${escHtml(b.hunter.wallet.slice(-4))}</div>` : ''}
+          </div>
+          ${b.hunter.proof ? `<a href="${escHtml(b.hunter.proof)}" target="_blank" rel="noopener" style="margin-left:auto;background:rgba(74,158,255,0.15);border:1px solid rgba(74,158,255,0.3);color:#4a9eff;font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:6px;text-decoration:none;white-space:nowrap;flex-shrink:0;">View Proof 🔗</a>` : `<div style="margin-left:auto;font-size:1.2rem">✅</div>`}
+        </div>
+      ` : ''}
+      ${b.pendingHunter && !b.completed ? `
+        <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:0.7rem 1rem;">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:#000;flex-shrink:0;">${b.pendingHunter.name.replace('@','').charAt(0).toUpperCase()}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:#f59e0b;font-size:0.85rem;">${escHtml(b.pendingHunter.name)}</div>
+            <div style="color:#6a90b8;font-size:0.72rem;">Proof submitted — verifying on Twitter...</div>
+          </div>
+          <div style="font-size:1.1rem;animation:spin 2s linear infinite;">⏳</div>
+        </div>
+      ` : ''}
+
+      <div class="card-footer">
+        <button class="btn-claim" onclick="openModal(${b.id})" ${b.completed || b.pendingHunter ? 'disabled' : ''}
+          style="${b.pendingHunter && !b.completed ? 'background:#1a1200;color:#f59e0b;border:1.5px solid rgba(245,158,11,0.3);' : ''}">
+          ${b.completed ? '✅ Completed' : b.pendingHunter ? '⏳ Proof Under Review' : '🎯 Claim Bounty'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function render() { renderStats(); renderGrid(); }
+
+// ── FILTERS ──
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+document.querySelectorAll('.cat-tag').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-tag').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    render();
+  });
+});
+
+// ── MODAL ──
+function openModal(id) {
+  const b = bounties.find(x => x.id === id);
+  if (!b || b.completed) return;
+  claimingId = id;
+  document.getElementById('modalTitle').textContent  = b.title;
+  document.getElementById('modalCat').textContent    = `${CAT_LABEL[b.cat]} · ${b.diff.charAt(0).toUpperCase()+b.diff.slice(1)}`;
+  document.getElementById('modalReward').textContent = `🎯 ${fmt(b.reward)} $Bountywork`;
+  document.getElementById('modalDesc').textContent   = b.desc;
+  document.getElementById('inputName').value   = '';
+  document.getElementById('inputWallet').value = '';
+  document.getElementById('inputProof').value  = '';
+  document.getElementById('inputNotes').value  = '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  claimingId = null;
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+async function submitClaim() {
+  const name   = document.getElementById('inputName').value.trim();
+  const wallet = document.getElementById('inputWallet').value.trim();
+  const proof  = document.getElementById('inputProof').value.trim();
+  const notes  = document.getElementById('inputNotes').value.trim();
+
+  if (!name)   { shake('inputName');   return; }
+  if (!wallet || wallet.length < 32) { shake('inputWallet'); return; }
+  if (!proof)  { shake('inputProof');  return; }
+
+  const b = bounties.find(x => x.id === claimingId);
+  if (!b) return;
+
+  const hunter = { name, wallet, proof, notes };
+  const submitBtn = document.querySelector('.btn-submit');
+  submitBtn.textContent = '🔍 Submitting...';
+  submitBtn.disabled = true;
+
+  if (USE_API) {
+    try {
+      const r = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: claimingId, hunter })
+      });
+      const data = await r.json();
+      if (r.ok && data.ok) {
+        // Update local state to pending
+        b.pendingHunter = hunter;
+        saveLocal();
+        closeModal();
+        render();
+        showToast(`⏳ Proof submitted! Twitter verification running now...`);
+        return;
+      } else {
+        showToast(`❌ ${data.error || 'Submit failed'}`);
+        submitBtn.textContent = '🎯 Submit Claim';
+        submitBtn.disabled = false;
+        return;
+      }
+    } catch(e) { /* fall through to local */ }
+  }
+
+  // Local fallback — mark pending in localStorage only
+  b.pendingHunter = hunter;
+  saveLocal();
+  closeModal();
+  render();
+  showToast(`⏳ Claim saved locally — run the server for Twitter verification.`);
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = '#ef4444';
+  el.style.animation = 'shake 0.4s ease';
+  setTimeout(() => {
+    el.style.animation = '';
+    el.style.borderColor = '';
+  }, 500);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── SHAKE KEYFRAME ──
+const style = document.createElement('style');
+style.textContent = `@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}`;
+document.head.appendChild(style);
+
+// ── SPIN ANIMATION ──
+const spinStyle = document.createElement('style');
+spinStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(spinStyle);
+
+// ── INIT ──
+(async () => {
+  await loadBounties();
+  render();
+  startPolling();
+})();
+</script>
+</body>
+</html>
