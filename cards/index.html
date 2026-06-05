@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Bountywork Cards | Pull System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#04050f;--bg2:#080916;--bg3:#0f1525;--text:#e8f4ff;--muted:#5a7090;--blue:#4a9eff;--gold:#f5c542;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+    /* ── BG canvas ── */
+    #bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
+
+    /* ════════════ NAV ════════════ */
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:300;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.8rem 2rem;
+      background:rgba(4,5,15,.9);backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(74,158,255,.12);
+    }
+    .nav-logo{font-family:'Anton',sans-serif;font-size:1.1rem;color:white;text-decoration:none;letter-spacing:.05em;
+      display:flex;align-items:center;gap:.5rem;text-shadow:0 0 14px rgba(74,158,255,.5);}
+    .nav-logo-b{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#fff,#a8d4ff);
+      display:flex;align-items:center;justify-content:center;font-family:'Anton',sans-serif;font-size:.9rem;color:#06101e;
+      box-shadow:0 0 10px rgba(74,158,255,.5);}
+    .nav-right{display:flex;align-items:center;gap:.75rem;}
+    .nav-link{color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:600;transition:color .2s;}
+    .nav-link:hover{color:white;}
+    .btn-nav-signup{
+      background:transparent;border:1.5px solid var(--blue);color:var(--blue);
+      font-weight:800;font-size:.82rem;padding:.4rem 1rem;border-radius:8px;cursor:pointer;
+      transition:background .2s,color .2s;
+    }
+    .btn-nav-signup:hover{background:var(--blue);color:#000;}
+    .nav-user{
+      display:flex;align-items:center;gap:.5rem;
+      background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.25);
+      border-radius:999px;padding:.3rem .85rem;font-size:.8rem;font-weight:700;color:var(--blue);
+    }
+    .nav-user .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;}
+    .nav-cta{background:linear-gradient(135deg,var(--gold),#ff7b00);color:#000;font-weight:900;font-size:.8rem;
+      padding:.4rem .95rem;border-radius:8px;text-decoration:none;transition:opacity .2s;}
+    .nav-cta:hover{opacity:.85;}
+
+    /* ════════════ WELCOME BANNER ════════════ */
+    #welcome-banner{
+      position:fixed;bottom:0;left:0;right:0;z-index:250;
+      background:linear-gradient(90deg,rgba(8,9,22,.98),rgba(8,9,22,.98));
+      border-top:2px solid rgba(74,158,255,.3);
+      padding:1rem 2rem;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;flex-wrap:wrap;
+      box-shadow:0 -8px 40px rgba(74,158,255,.12);
+      animation:slideupp .4s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes slideupp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    .wb-left{display:flex;align-items:center;gap:1rem;}
+    .wb-icon{font-size:2rem;flex-shrink:0;}
+    .wb-text strong{display:block;color:white;font-size:.95rem;font-weight:800;margin-bottom:.2rem;}
+    .wb-text span{color:var(--muted);font-size:.8rem;line-height:1.5;}
+    .wb-actions{display:flex;gap:.6rem;align-items:center;flex-shrink:0;}
+    .wb-signup{
+      font-family:'Anton',sans-serif;letter-spacing:.06em;font-size:.95rem;
+      padding:.65rem 1.6rem;border-radius:10px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,var(--blue),#1a6aff);color:white;
+      box-shadow:0 4px 18px rgba(74,158,255,.4);transition:transform .15s,box-shadow .2s;
+    }
+    .wb-signup:hover{transform:translateY(-2px);box-shadow:0 6px 26px rgba(74,158,255,.6);}
+    .wb-login{background:transparent;border:1.5px solid rgba(74,158,255,.3);color:var(--blue);
+      font-weight:700;font-size:.82rem;padding:.6rem 1.1rem;border-radius:9px;cursor:pointer;transition:border-color .2s;}
+    .wb-login:hover{border-color:var(--blue);}
+    .wb-dismiss{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.2rem .4rem;transition:color .2s;flex-shrink:0;}
+    .wb-dismiss:hover{color:white;}
+
+    /* ════════════ MULTI-SELECT ════════════ */
+    .select-toggle{
+      background:transparent;border:1.5px solid rgba(74,158,255,.3);
+      color:var(--muted);font-weight:700;font-size:.75rem;
+      padding:.35rem .9rem;border-radius:8px;cursor:pointer;
+      transition:all .2s;
+    }
+    .select-toggle:hover{border-color:var(--blue);color:var(--blue);}
+    .select-toggle.active{border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,.08);}
+
+    #bulk-bar{
+      display:none;
+      align-items:center;gap:1rem;flex-wrap:wrap;
+      max-width:1100px;margin:0 auto 1.5rem;
+      background:rgba(239,68,68,.07);
+      border:1.5px solid rgba(239,68,68,.25);
+      border-radius:12px;padding:.75rem 1.25rem;
+    }
+    #bulk-bar.visible{display:flex;}
+    .bulk-info{font-size:.88rem;color:white;font-weight:700;}
+    .bulk-info span{color:#ef4444;}
+    .btn-select-all{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);
+      color:white;font-size:.75rem;font-weight:700;padding:.35rem .85rem;border-radius:7px;cursor:pointer;transition:background .15s;}
+    .btn-select-all:hover{background:rgba(255,255,255,.14);}
+    .btn-bulk-delete{
+      margin-left:auto;
+      background:linear-gradient(135deg,#ef4444,#dc2626);color:white;
+      font-weight:900;font-size:.82rem;padding:.45rem 1.2rem;
+      border-radius:9px;border:none;cursor:pointer;
+      box-shadow:0 3px 14px rgba(239,68,68,.35);transition:opacity .2s,transform .15s;
+    }
+    .btn-bulk-delete:hover{opacity:.88;transform:translateY(-1px);}
+    .btn-bulk-delete:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+
+    /* Card select state */
+    .card-sel-overlay{
+      position:absolute;inset:0;z-index:35;border-radius:13px;
+      cursor:pointer;display:none;transition:background .15s;
+    }
+    .sel-mode .card-sel-overlay{display:block;}
+    .card-scene.sel-active .card-sel-overlay{background:rgba(74,158,255,.22);}
+    .card-scene.sel-active .card-front{border-color:#4a9eff!important;box-shadow:0 0 0 2px #4a9eff,0 0 20px rgba(74,158,255,.5)!important;}
+    .sel-check{
+      position:absolute;top:7px;left:7px;z-index:36;
+      width:22px;height:22px;border-radius:6px;
+      border:2px solid rgba(255,255,255,.4);background:rgba(4,5,15,.85);
+      display:none;align-items:center;justify-content:center;
+      font-size:.75rem;font-weight:900;color:white;
+      transition:background .15s,border-color .15s;pointer-events:none;
+    }
+    .sel-mode .sel-check{display:flex;}
+    .card-scene.sel-active .sel-check{background:var(--blue);border-color:var(--blue);}
+
+    /* ════════════ AUTH MODAL ════════════ */
+    .modal-overlay{
+      position:fixed;inset:0;z-index:500;
+      background:rgba(4,5,15,.9);backdrop-filter:blur(8px);
+      display:flex;align-items:center;justify-content:center;padding:1rem;
+      opacity:0;pointer-events:none;transition:opacity .3s;
+    }
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+    .modal-box{
+      background:var(--bg2);border:1.5px solid rgba(74,158,255,.25);border-radius:20px;
+      padding:2.5rem 2rem;width:100%;max-width:420px;
+      transform:translateY(20px) scale(.97);transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .modal-overlay.open .modal-box{transform:translateY(0) scale(1);}
+    .modal-title{font-family:'Anton',sans-serif;font-size:1.8rem;letter-spacing:.04em;color:white;
+      text-shadow:0 0 20px rgba(74,158,255,.5);margin-bottom:.4rem;}
+    .modal-sub{color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1.5rem;}
+    .modal-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;}
+    .m-tab{flex:1;padding:.55rem;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);
+      background:transparent;color:var(--muted);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;}
+    .m-tab.active{background:rgba(74,158,255,.15);border-color:var(--blue);color:white;}
+    .modal-input{
+      width:100%;background:var(--bg3);border:1.5px solid rgba(74,158,255,.2);border-radius:10px;
+      padding:.75rem 1rem;color:white;font-size:.95rem;font-family:inherit;
+      transition:border-color .2s;margin-bottom:.75rem;outline:none;
+    }
+    .modal-input:focus{border-color:var(--blue);}
+    .modal-error{color:#ef4444;font-size:.78rem;margin-bottom:.75rem;min-height:1rem;}
+    .modal-btn{
+      width:100%;font-family:'Anton',sans-serif;letter-spacing:.08em;font-size:1rem;
+      padding:.85rem;border-radius:10px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,var(--blue),#1a6aff);color:white;
+      box-shadow:0 4px 20px rgba(74,158,255,.4);transition:transform .15s,box-shadow .2s;
+    }
+    .modal-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(74,158,255,.6);}
+    .modal-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .modal-switch{margin-top:1rem;text-align:center;font-size:.8rem;color:var(--muted);}
+    .modal-switch a{color:var(--blue);cursor:pointer;font-weight:700;text-decoration:none;}
+
+    /* ════════════ PULL HERO ════════════ */
+    #pull-section{
+      position:relative;z-index:1;min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;padding:7rem 1.5rem 4rem;
+    }
+    #pull-section::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse at 50% 30%,rgba(245,197,66,.07) 0%,transparent 60%),
+        radial-gradient(ellipse at 20% 70%,rgba(168,85,247,.05) 0%,transparent 55%);
+    }
+    .pull-eyebrow{
+      display:inline-flex;align-items:center;gap:.5rem;
+      border:1.5px solid rgba(245,197,66,.3);background:rgba(245,197,66,.06);
+      border-radius:999px;padding:.35rem 1rem;font-size:.7rem;font-weight:800;
+      color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1.5rem;
+      animation:fadein .6s ease both;
+    }
+    .pull-title{
+      font-family:'Anton',sans-serif;font-size:clamp(2.5rem,8vw,6rem);
+      letter-spacing:.03em;color:white;line-height:.95;margin-bottom:.5rem;
+      -webkit-text-stroke:3px #001840;
+      text-shadow:4px 4px 0 #001030,8px 8px 0 #000820,0 0 40px rgba(74,158,255,.7),0 0 100px rgba(74,158,255,.2);
+      animation:fadein .7s .1s ease both;
+    }
+    .pull-title span{color:var(--gold);-webkit-text-stroke-color:#5a3800;}
+    .pull-sub{color:var(--muted);font-size:.95rem;max-width:480px;margin:.8rem auto 2rem;line-height:1.7;animation:fadein .7s .2s ease both;}
+
+    /* Pack */
+    .pack-wrap{position:relative;margin-bottom:2rem;animation:fadein .8s .3s ease both;}
+    .pack{
+      width:170px;height:238px;border-radius:18px;
+      background:linear-gradient(160deg,#0f1830,#060c18);
+      border:2.5px solid rgba(245,197,66,.6);position:relative;overflow:hidden;
+      cursor:pointer;
+      box-shadow:0 0 28px rgba(245,197,66,.4),0 0 80px rgba(245,197,66,.12);
+      transition:transform .2s,box-shadow .2s;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;
+    }
+    .pack:hover{transform:translateY(-5px) scale(1.03);box-shadow:0 0 40px rgba(245,197,66,.6),0 0 100px rgba(245,197,66,.2);}
+    .pack:active{transform:scale(.98);}
+    .pack-shimmer{
+      position:absolute;inset:0;border-radius:15px;pointer-events:none;
+      background:linear-gradient(135deg,transparent 0%,rgba(255,255,255,.06) 40%,rgba(255,255,255,.14) 50%,rgba(255,255,255,.06) 60%,transparent 100%);
+      animation:packshine 2.4s ease-in-out infinite;
+    }
+    @keyframes packshine{0%,100%{opacity:0;transform:translateX(-100%);}40%{opacity:1;}50%{opacity:1;}90%{opacity:0;transform:translateX(100%);}}
+    .pack-logo{font-family:'Anton',sans-serif;font-size:2rem;color:white;text-shadow:0 0 18px rgba(245,197,66,.8);position:relative;z-index:1;letter-spacing:.05em;}
+    .pack-emoji{font-size:2.2rem;position:relative;z-index:1;}
+    .pack-season{font-size:.58rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(245,197,66,.65);position:relative;z-index:1;}
+    .pack-line{width:55%;height:1px;background:linear-gradient(90deg,transparent,rgba(245,197,66,.4),transparent);position:relative;z-index:1;}
+
+    /* Rates */
+    .rates-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.45rem;margin-bottom:1.75rem;animation:fadein .8s .35s ease both;}
+    .rate-chip{padding:.28rem .8rem;border-radius:999px;border:1.5px solid;font-size:.65rem;font-weight:700;display:flex;align-items:center;gap:.35rem;}
+    .rc-dot{width:6px;height:6px;border-radius:50%;}
+
+    /* Pull buttons */
+    .pull-btns{display:flex;gap:.85rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;animation:fadein .8s .4s ease both;}
+    .btn-pull{
+      font-family:'Anton',sans-serif;font-size:1rem;letter-spacing:.06em;
+      padding:.9rem 2rem;border-radius:12px;border:none;cursor:pointer;
+      transition:transform .15s,box-shadow .2s;position:relative;overflow:hidden;
+    }
+    .btn-pull::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);pointer-events:none;}
+    .btn-x1{background:linear-gradient(135deg,var(--gold),#ff7b00);color:#000;box-shadow:0 4px 22px rgba(245,197,66,.4);}
+    .btn-x1:hover{transform:translateY(-3px);box-shadow:0 8px 34px rgba(245,197,66,.6);}
+    .btn-x10{background:linear-gradient(135deg,#6d28d9,#a855f7);color:white;box-shadow:0 4px 22px rgba(168,85,247,.4);}
+    .btn-x10:hover{transform:translateY(-3px);box-shadow:0 8px 34px rgba(168,85,247,.6);}
+    .btn-pull:active{transform:scale(.97);}
+    .btn-pull:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+
+    /* Pull meta */
+    .pull-meta{animation:fadein .8s .45s ease both;display:flex;flex-direction:column;align-items:center;gap:.35rem;}
+    .pull-counter{font-size:.82rem;color:var(--muted);font-weight:600;}
+    .pull-counter span{color:white;font-weight:800;}
+    .cooldown-bar-wrap{width:240px;height:6px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;display:none;}
+    .cooldown-bar{height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:999px;transition:width 1s linear;}
+    .cooldown-text{font-size:.75rem;color:#ef4444;font-weight:700;display:none;}
+
+    /* New card pool ticker */
+    .pool-ticker{
+      display:inline-flex;align-items:center;gap:.5rem;margin-top:.85rem;
+      background:rgba(74,158,255,.06);border:1px solid rgba(74,158,255,.18);
+      border-radius:999px;padding:.3rem .85rem;font-size:.68rem;font-weight:600;color:var(--muted);
+    }
+    .pool-ticker .pt-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 5px #4ade80;animation:blink 1.8s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+    /* ════════════ REVEAL OVERLAY ════════════ */
+    #reveal-overlay{
+      position:fixed;inset:0;z-index:400;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:1rem;visibility:hidden;pointer-events:none;
+      background:rgba(4,5,15,0);transition:background .4s;
+    }
+    #reveal-overlay.active{visibility:visible;pointer-events:all;background:rgba(4,5,15,.93);}
+    #rarity-flash{position:fixed;inset:0;z-index:399;pointer-events:none;opacity:0;}
+    @keyframes rflash{0%{opacity:0;}15%{opacity:.6;}70%{opacity:.2;}100%{opacity:0;}}
+
+    #reveal-single{display:flex;flex-direction:column;align-items:center;gap:1.25rem;opacity:0;transform:translateY(24px) scale(.95);transition:opacity .4s,transform .45s cubic-bezier(.34,1.56,.64,1);}
+    #reveal-single.show{opacity:1;transform:translateY(0) scale(1);}
+    .rarity-announce{font-family:'Anton',sans-serif;font-size:clamp(1.3rem,4vw,2.2rem);letter-spacing:.1em;text-transform:uppercase;opacity:0;}
+    .rarity-announce.pop{animation:anpop .5s cubic-bezier(.34,1.56,.64,1) both;}
+    @keyframes anpop{from{opacity:0;transform:scale(.4);}to{opacity:1;transform:scale(1);}}
+
+    #reveal-multi{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;max-width:1100px;}
+    .rmw{opacity:0;transform:translateY(36px) scale(.88);}
+    .rmw.show{animation:cpop .5s cubic-bezier(.34,1.56,.64,1) both;}
+    @keyframes cpop{from{opacity:0;transform:translateY(36px) scale(.88);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+    .collect-btn{
+      font-family:'Anton',sans-serif;letter-spacing:.08em;font-size:1rem;
+      padding:.85rem 2.5rem;border-radius:12px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,var(--blue),#1a6aff);color:white;
+      box-shadow:0 4px 22px rgba(74,158,255,.5);transition:transform .2s,box-shadow .2s;
+      opacity:0;pointer-events:none;
+    }
+    .collect-btn.show{opacity:1;pointer-events:all;animation:fadein .4s .2s ease both;}
+    .collect-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(74,158,255,.7);}
+
+    /* ════════════ COMMUNITY FLEX ════════════ */
+    #flex-section{
+      position:relative;z-index:1;
+      padding:5rem 1.5rem;
+      border-top:1px solid rgba(245,197,66,.1);
+      background:linear-gradient(180deg,transparent,rgba(245,197,66,.03) 30%,rgba(245,197,66,.03) 70%,transparent);
+    }
+    .flex-header{text-align:center;margin-bottom:3rem;}
+    .section-tag{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;}
+    .section-title{font-family:'Anton',sans-serif;font-size:clamp(1.8rem,4vw,3.5rem);letter-spacing:.03em;color:white;text-shadow:2px 2px 0 #001030,0 0 22px rgba(245,197,66,.4);}
+
+    .flex-grid{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;max-width:1100px;margin:0 auto;}
+    .flex-card{
+      background:var(--bg2);border:1.5px solid rgba(245,197,66,.15);border-radius:16px;
+      padding:1.25rem;width:220px;transition:border-color .2s,transform .2s,box-shadow .2s;
+      cursor:pointer;
+    }
+    .flex-card:hover{border-color:rgba(245,197,66,.45);transform:translateY(-3px);box-shadow:0 8px 24px rgba(245,197,66,.1);}
+    .flex-card-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.85rem;}
+    .flex-avatar{
+      width:38px;height:38px;border-radius:50%;
+      background:linear-gradient(135deg,var(--gold),#ff7b00);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Anton',sans-serif;font-size:1.1rem;color:#000;flex-shrink:0;
+      box-shadow:0 0 12px rgba(245,197,66,.4);
+    }
+    .flex-username{font-weight:800;font-size:.95rem;color:white;}
+    .flex-total{font-size:.7rem;color:var(--muted);}
+    .flex-top-card{
+      background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:10px;
+      padding:.65rem .75rem;display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem;
+    }
+    .flex-top-emoji{font-size:1.6rem;}
+    .flex-top-info .ftc-name{font-size:.78rem;font-weight:700;color:white;line-height:1.2;}
+    .flex-top-info .ftc-rarity{font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
+    .flex-stats{display:flex;gap:.4rem;flex-wrap:wrap;}
+    .flex-stat{
+      font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid;
+    }
+    .empty-flex{text-align:center;color:var(--muted);padding:3rem;width:100%;}
+
+    /* ════════════ MY COLLECTION ════════════ */
+    #collection-section{position:relative;z-index:1;padding:4rem 1.5rem 6rem;border-top:1px solid rgba(74,158,255,.1);}
+    .coll-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;max-width:1100px;margin:0 auto 2rem;}
+    .coll-title{font-family:'Anton',sans-serif;font-size:clamp(1.4rem,3.5vw,2.2rem);letter-spacing:.03em;color:white;text-shadow:2px 2px 0 #001030,0 0 18px rgba(74,158,255,.4);}
+    .coll-badge{background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.25);border-radius:999px;padding:.3rem .9rem;font-size:.75rem;font-weight:700;color:var(--blue);}
+    .coll-clear{background:transparent;border:1.5px solid rgba(255,255,255,.1);border-radius:8px;padding:.35rem .85rem;color:var(--muted);font-size:.72rem;font-weight:700;cursor:pointer;transition:border-color .2s,color .2s;}
+    .coll-clear:hover{border-color:#ef4444;color:#ef4444;}
+    .coll-filters{display:flex;gap:.45rem;flex-wrap:wrap;max-width:1100px;margin:0 auto 1.75rem;}
+    .cfilt{padding:.32rem .85rem;border-radius:999px;border:1.5px solid;font-size:.7rem;font-weight:700;cursor:pointer;background:transparent;transition:all .15s;}
+    .cfilt.active{color:#000!important;}
+    #coll-grid{display:flex;flex-wrap:wrap;gap:1.6rem;justify-content:center;max-width:1200px;margin:0 auto;}
+    .empty-coll{color:var(--muted);font-size:.9rem;text-align:center;padding:3rem;width:100%;}
+
+    /* ════════════ THE CARD ════════════ */
+    .card-scene{perspective:800px;cursor:pointer;flex-shrink:0;}
+    .card-body{width:100%;height:100%;position:relative;transform-style:preserve-3d;border-radius:13px;}
+    .card-body.ease{transition:transform .55s cubic-bezier(.34,1.56,.64,1)!important;}
+    .card-front,.card-back{position:absolute;inset:0;border-radius:13px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;}
+    .card-back{transform:rotateY(180deg);}
+    .card-front{display:flex;flex-direction:column;border:2.5px solid var(--rc,#4a9eff);
+      box-shadow:0 0 16px var(--rg,rgba(74,158,255,.4)),0 0 48px var(--rg,rgba(74,158,255,.1));
+      background:var(--cbg,linear-gradient(160deg,#0a1020,#050810));}
+    .holo-l,.shine-l{position:absolute;inset:0;border-radius:11px;pointer-events:none;z-index:10;opacity:0;transition:opacity .2s;}
+    .card-scene:hover .holo-l,.card-scene:hover .shine-l{opacity:1;}
+    .c-top{display:flex;align-items:center;justify-content:space-between;padding:5px 9px 3px;position:relative;z-index:5;}
+    .c-num{font-size:.55rem;font-weight:800;color:rgba(255,255,255,.3);font-family:'Anton',sans-serif;letter-spacing:.05em;}
+    .c-badge{font-size:.5rem;font-weight:900;padding:2px 6px;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;background:var(--rc);color:#000;}
+    .c-art{position:relative;z-index:5;margin:0 7px;height:110px;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--ab,linear-gradient(135deg,#0a1830,#050f20));border:1px solid rgba(255,255,255,.07);}
+    .c-art-emoji{font-size:3.4rem;position:relative;z-index:2;filter:drop-shadow(0 0 12px var(--rc));animation:artpulse 3s ease-in-out infinite;}
+    @keyframes artpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+    .c-art-bg{position:absolute;inset:0;background:var(--ag);opacity:.5;}
+    .sparkle{position:absolute;border-radius:50%;pointer-events:none;z-index:3;animation:sparkle var(--sd,2s) var(--ss,0s) ease-in-out infinite;}
+    @keyframes sparkle{0%,100%{opacity:0;transform:scale(0);}50%{opacity:1;transform:scale(1);}}
+    .c-name-row{display:flex;align-items:baseline;justify-content:space-between;padding:4px 9px 2px;position:relative;z-index:5;}
+    .c-bounty{font-family:'Anton',sans-serif;font-size:.8rem;color:white;text-shadow:0 0 10px var(--rc);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+    .c-reward{font-family:'Anton',sans-serif;font-size:.68rem;color:var(--rc);white-space:nowrap;}
+    .c-div{height:1px;background:linear-gradient(90deg,transparent,var(--rc),transparent);opacity:.3;margin:0 9px;position:relative;z-index:5;}
+    .c-info{padding:5px 9px;position:relative;z-index:5;flex:1;}
+    .c-hunter-row{display:flex;align-items:center;gap:4px;margin-bottom:3px;}
+    .c-avatar{width:16px;height:16px;border-radius:50%;background:var(--rc);display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:900;color:#000;flex-shrink:0;}
+    .c-hunter{font-size:.6rem;font-weight:700;color:var(--rc);}
+    .c-desc{font-size:.56rem;color:rgba(255,255,255,.52);line-height:1.4;font-style:italic;}
+    .c-bottom{display:flex;align-items:center;justify-content:space-between;padding:3px 9px 6px;position:relative;z-index:5;}
+    .c-stars{font-size:.58rem;}
+    .c-proof{font-size:.5rem;font-weight:700;color:rgba(255,255,255,.28);text-decoration:none;border:1px solid rgba(255,255,255,.1);border-radius:3px;padding:1px 4px;transition:color .2s,border-color .2s;}
+    .c-proof:hover{color:var(--blue);border-color:var(--blue);}
+    .card-back{background:linear-gradient(160deg,#06080f,#0a0e1a);border:2.5px solid rgba(74,158,255,.3);box-shadow:0 0 16px rgba(74,158,255,.2);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;}
+    .back-pat{position:absolute;inset:0;border-radius:11px;pointer-events:none;
+      background-image:repeating-linear-gradient(45deg,rgba(74,158,255,.025) 0,rgba(74,158,255,.025) 1px,transparent 1px,transparent 16px),
+        repeating-linear-gradient(-45deg,rgba(74,158,255,.025) 0,rgba(74,158,255,.025) 1px,transparent 1px,transparent 16px);}
+    .back-circ{width:60px;height:60px;border-radius:50%;position:relative;z-index:2;
+      background:linear-gradient(135deg,#fff 0%,#c0d8ff 40%,#4a9eff 80%,#0a3aaa 100%);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Anton',sans-serif;font-size:1.7rem;color:#06080f;
+      box-shadow:0 0 0 3px rgba(74,158,255,.2),0 0 18px rgba(74,158,255,.5);}
+    .back-name{font-family:'Anton',sans-serif;font-size:.85rem;letter-spacing:.08em;color:white;position:relative;z-index:2;text-shadow:0 0 10px rgba(74,158,255,.6);}
+    .back-tick{font-family:'Anton',sans-serif;font-size:.55rem;letter-spacing:.1em;color:var(--blue);position:relative;z-index:2;}
+    .back-ca{font-family:monospace;font-size:.35rem;color:rgba(74,158,255,.32);position:relative;z-index:2;text-align:center;padding:0 8px;line-height:1.6;}
+
+    /* FOOTER */
+    footer{position:relative;z-index:1;border-top:1px solid rgba(74,158,255,.1);padding:1.5rem;text-align:center;}
+    footer .fl{font-family:'Anton',sans-serif;font-size:1rem;color:white;text-shadow:0 0 12px rgba(74,158,255,.4);}
+    footer .fca{font-family:monospace;font-size:.6rem;color:var(--blue);opacity:.5;margin:.3rem 0 .7rem;word-break:break-all;}
+    footer .flinks{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+    footer .flinks a{color:var(--muted);text-decoration:none;font-size:.75rem;font-weight:600;transition:color .2s;}
+    footer .flinks a:hover{color:white;}
+
+    /* ════════════ TRASH / DISCARD ════════════ */
+    .trash-btn{
+      position:absolute;bottom:7px;right:7px;z-index:30;
+      width:26px;height:26px;border-radius:8px;
+      background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.28);
+      color:#ef4444;font-size:.76rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;transition:opacity .2s,background .15s,transform .15s;
+    }
+    .card-scene:hover .trash-btn{opacity:1;}
+    .trash-btn:hover{background:rgba(239,68,68,.25);transform:scale(1.12);}
+
+    .discard-confirm{
+      position:absolute;inset:0;z-index:40;border-radius:13px;
+      background:rgba(4,5,15,.88);backdrop-filter:blur(4px);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;
+      opacity:0;pointer-events:none;transition:opacity .2s;
+    }
+    .discard-confirm.show{opacity:1;pointer-events:all;}
+    .discard-confirm .dc-icon{font-size:1.8rem;}
+    .discard-confirm .dc-txt{color:white;font-weight:800;font-size:.85rem;}
+    .discard-confirm .dc-sub{color:var(--muted);font-size:.7rem;margin-top:-.3rem;}
+    .discard-confirm .dc-btns{display:flex;gap:.5rem;margin-top:.1rem;}
+    .dc-yes{padding:.42rem 1rem;background:#ef4444;color:white;font-weight:800;font-size:.78rem;border:none;border-radius:8px;cursor:pointer;transition:background .15s;}
+    .dc-yes:hover{background:#dc2626;}
+    .dc-no{padding:.42rem 1rem;background:rgba(255,255,255,.07);color:white;font-weight:700;font-size:.78rem;border:1.5px solid rgba(255,255,255,.14);border-radius:8px;cursor:pointer;transition:background .15s;}
+    .dc-no:hover{background:rgba(255,255,255,.14);}
+
+    @keyframes card-discard{
+      0%{opacity:1;transform:scale(1) rotate(0deg);}
+      30%{opacity:.9;transform:scale(.95) rotate(2deg);}
+      100%{opacity:0;transform:scale(.7) rotate(-10deg) translateY(16px);}
+    }
+    .card-scene.discarding{animation:card-discard .45s ease both;pointer-events:none;}
+
+    /* UTILS */
+    @keyframes fadein{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes legpulse{0%,100%{filter:drop-shadow(0 0 8px rgba(245,197,66,.5));}50%{filter:drop-shadow(0 0 22px rgba(245,197,66,.9)) drop-shadow(0 0 44px rgba(255,123,0,.4));}}
+
+    @media(max-width:600px){.pull-btns{flex-direction:column;align-items:center;}.flex-card{width:160px;}nav{padding:.75rem 1rem;}.nav-link{display:none;}}
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="rarity-flash"></div>
+
+<!-- ═══ AUTH MODAL ═══ -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-box">
+    <div class="modal-title">🎯 JOIN THE HUNT</div>
+    <p class="modal-sub">Create your hunter profile to pull cards and flex your collection with the community.</p>
+    <div class="modal-tabs">
+      <button class="m-tab active" id="tabRegister" onclick="switchTab('register')">Sign Up</button>
+      <button class="m-tab" id="tabLogin" onclick="switchTab('login')">Log In</button>
+    </div>
+    <input class="modal-input" id="authUsername" placeholder="Choose a username (2-20 chars)" maxlength="20" oninput="clearAuthError()"/>
+    <div class="modal-error" id="authError"></div>
+    <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">🎯 Create Account</button>
+    <div class="modal-switch" id="authSwitch">Already have an account? <a onclick="switchTab('login')">Log in</a></div>
+  </div>
+</div>
+
+<!-- ═══ REVEAL OVERLAY ═══ -->
+<div id="reveal-overlay">
+  <div id="reveal-single">
+    <div class="rarity-announce" id="rarityAnnounce"></div>
+    <div id="reveal-card-slot"></div>
+    <button class="collect-btn" id="collectBtn" onclick="closeReveal()">+ Add to Collection</button>
+  </div>
+  <div id="reveal-multi" style="display:none;"></div>
+  <button class="collect-btn" id="collectBtnMulti" style="display:none;margin-top:1.5rem;" onclick="closeReveal()">+ Add All to Collection</button>
+</div>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-b">B</div>
+    BOUNTYWORK CARDS
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="#flex-section">Community</a>
+    <a class="nav-link" href="#collection-section">My Cards</a>
+    <div class="nav-user" id="navUser" style="display:none;">
+      <div class="dot"></div>
+      <span id="navUsername">Hunter</span>
+    </div>
+    <button class="btn-nav-signup" id="navSignupBtn" onclick="openAuthModal('register')">Sign Up</button>
+    <button class="nav-link" id="navLoginBtn" style="cursor:pointer;background:none;border:none;font-size:.82rem;" onclick="openAuthModal('login')">Log In</button>
+    <button class="nav-link" id="navLogout" style="display:none;cursor:pointer;background:none;border:none;font-size:.82rem;" onclick="logout()">Log out</button>
+    <a class="nav-cta" href="https://pump.fun/coin/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank" rel="noopener">Buy $BOUNTYWORK</a>
+  </div>
+</nav>
+
+<!-- ═══ WELCOME BANNER ═══ -->
+<div id="welcome-banner" style="display:none;">
+  <div class="wb-left">
+    <div class="wb-icon">🎯</div>
+    <div class="wb-text">
+      <strong>Welcome to Bountywork Cards!</strong>
+      <span>Sign up for free to save your pulls, build your collection, and appear on the Flex Wall.</span>
+    </div>
+  </div>
+  <div class="wb-actions">
+    <button class="wb-signup" onclick="openAuthModal('register')">🎯 Create Free Account</button>
+    <button class="wb-login" onclick="openAuthModal('login')">Log In</button>
+  </div>
+  <button class="wb-dismiss" onclick="dismissWelcome()" title="Dismiss">✕</button>
+</div>
+
+<!-- ═══ PULL SECTION ═══ -->
+<section id="pull-section">
+  <div class="pull-eyebrow">🎯 Season 1 · RNG Pull System</div>
+  <h1 class="pull-title">PULL YOUR<br/><span>CARD</span></h1>
+  <p class="pull-sub">RNG decides your fate. 5% Legendary drop rate. Can you pull the rarest card alive?</p>
+
+  <div class="pack-wrap">
+    <div class="pack" onclick="packClick()">
+      <div class="pack-shimmer"></div>
+      <div class="pack-logo">BOUNTYWORK</div>
+      <div class="pack-line"></div>
+      <div class="pack-emoji">🎯</div>
+      <div class="pack-season">SEASON 1</div>
+    </div>
+  </div>
+
+  <div class="rates-row">
+    <div class="rate-chip" style="color:#f5c542;border-color:rgba(245,197,66,.35);background:rgba(245,197,66,.06);"><div class="rc-dot" style="background:#f5c542;box-shadow:0 0 5px #f5c542;"></div>Legendary 5%</div>
+    <div class="rate-chip" style="color:#c084fc;border-color:rgba(192,132,252,.35);background:rgba(192,132,252,.06);"><div class="rc-dot" style="background:#c084fc;box-shadow:0 0 5px #c084fc;"></div>Epic 25%</div>
+    <div class="rate-chip" style="color:#60a5fa;border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.06);"><div class="rc-dot" style="background:#60a5fa;box-shadow:0 0 5px #60a5fa;"></div>Rare 45%</div>
+    <div class="rate-chip" style="color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.06);"><div class="rc-dot" style="background:#4ade80;box-shadow:0 0 5px #4ade80;"></div>Uncommon 20%</div>
+    <div class="rate-chip" style="color:#9ca3af;border-color:rgba(156,163,175,.25);background:rgba(156,163,175,.05);"><div class="rc-dot" style="background:#9ca3af;"></div>Common 5%</div>
+  </div>
+
+  <div class="pull-btns">
+    <button class="btn-pull btn-x1" id="btn1x" onclick="triggerPull(1)">🎯 PULL x1</button>
+    <button class="btn-pull btn-x10" id="btn10x" onclick="triggerPull(10)">💜 PULL x10</button>
+  </div>
+
+  <div class="pull-meta">
+    <div class="pull-counter">Pulls left: <span id="pullsLeft">–</span> &nbsp;·&nbsp; Total pulls: <span id="totalPulls">0</span></div>
+    <div class="cooldown-bar-wrap" id="cooldownBarWrap">
+      <div class="cooldown-bar" id="cooldownBar" style="width:100%;"></div>
+    </div>
+    <div class="cooldown-text" id="cooldownText">⏳ Cooldown: 30:00</div>
+    <div class="pool-ticker">
+      <div class="pt-dot"></div>
+      <span id="poolStatus">Loading card pool...</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COMMUNITY FLEX ═══ -->
+<section id="flex-section">
+  <div class="flex-header">
+    <div class="section-tag">Community</div>
+    <div class="section-title">🏆 FLEX WALL</div>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:.5rem;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.65;">
+      The hunters who pulled the rarest cards. Sign up and earn your spot.
+    </p>
+  </div>
+  <div class="flex-grid" id="flexGrid">
+    <div class="empty-flex">
+      <div style="font-size:2rem;margin-bottom:.5rem;">🎯</div>
+      <div>No hunters yet — be the first to sign up!</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MY COLLECTION ═══ -->
+<section id="collection-section">
+  <div class="coll-header">
+    <div style="display:flex;align-items:center;gap:.65rem;">
+      <div class="coll-title">MY COLLECTION</div>
+      <div class="coll-badge" id="collBadge">0 cards</div>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center;">
+      <button class="select-toggle" id="selectToggle" onclick="toggleSelectMode()">☑ Select</button>
+      <button class="coll-clear" onclick="clearCollection()">Clear All</button>
+    </div>
+  </div>
+
+  <!-- Bulk delete bar (shown in select mode) -->
+  <div id="bulk-bar">
+    <div class="bulk-info"><span id="selectedCount">0</span> card(s) selected</div>
+    <button class="btn-select-all" onclick="selectAllCards()">Select All</button>
+    <button class="btn-bulk-delete" id="bulkDeleteBtn" onclick="bulkDiscard()" disabled>🗑️ Delete Selected</button>
+  </div>
+  <div class="coll-filters">
+    <button class="cfilt active" data-cf="all" style="color:#aaa;border-color:rgba(170,170,170,.35);">All</button>
+    <button class="cfilt" data-cf="LEGENDARY" style="color:#f5c542;border-color:rgba(245,197,66,.4);">👑 Legendary</button>
+    <button class="cfilt" data-cf="EPIC" style="color:#c084fc;border-color:rgba(192,132,252,.4);">💜 Epic</button>
+    <button class="cfilt" data-cf="RARE" style="color:#60a5fa;border-color:rgba(96,165,250,.4);">💙 Rare</button>
+    <button class="cfilt" data-cf="UNCOMMON" style="color:#4ade80;border-color:rgba(74,222,128,.4);">💚 Uncommon</button>
+    <button class="cfilt" data-cf="COMMON" style="color:#9ca3af;border-color:rgba(156,163,175,.3);">⚪ Common</button>
+  </div>
+  <div id="coll-grid"><div class="empty-coll"><div>🎯</div><div style="margin-top:.4rem;">Pull cards to start your collection!</div></div></div>
+</section>
+
+<footer>
+  <div class="fl">BOUNTYWORK CARDS</div>
+  <div class="fca">CA: J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump</div>
+  <div class="flinks">
+    <a href="https://pump.fun/coin/J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump" target="_blank">Buy $BOUNTYWORK</a>
+    <a href="https://x.com/ayushquantt" target="_blank">Twitter / X</a>
+    <a href="bounties.html">Bounty Board</a>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════ */
+const API = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1' ? '' : '';
+const RC = {LEGENDARY:'#f5c542',EPIC:'#c084fc',RARE:'#60a5fa',UNCOMMON:'#4ade80',COMMON:'#9ca3af'};
+const FLASH_C = {LEGENDARY:'rgba(245,197,66,.5)',EPIC:'rgba(192,132,252,.4)',RARE:'rgba(96,165,250,.35)',UNCOMMON:'rgba(74,222,128,.25)',COMMON:'rgba(100,100,120,.15)'};
+const ORDER = {LEGENDARY:0,EPIC:1,RARE:2,UNCOMMON:3,COMMON:4};
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let currentUser  = JSON.parse(localStorage.getItem('bw_user')||'null');
+let collection   = JSON.parse(localStorage.getItem('bw_collection')||'[]');
+let collFilter   = 'all';
+let pulling      = false;
+let pendingCards = [];
+let pullsLeft    = 40;
+let cooldownEnd  = 0;
+let cooldownTimer = null;
+let poolSize     = 0;
+
+/* ═══════════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════════ */
+let authTab = 'register';
+
+function openAuthModal(tab='register') {
+  switchTab(tab);
+  document.getElementById('authModal').classList.add('open');
+  setTimeout(()=>document.getElementById('authUsername').focus(), 100);
+}
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('open');
+}
+function switchTab(t) {
+  authTab = t;
+  document.getElementById('tabRegister').classList.toggle('active', t==='register');
+  document.getElementById('tabLogin').classList.toggle('active', t==='login');
+  document.getElementById('authSubmitBtn').textContent = t==='register' ? '🎯 Create Account' : '🔓 Log In';
+  document.getElementById('authSwitch').innerHTML = t==='register'
+    ? 'Already have an account? <a onclick="switchTab(\'login\')">Log in</a>'
+    : 'New here? <a onclick="switchTab(\'register\')">Sign up</a>';
+  clearAuthError();
+}
+function clearAuthError() { document.getElementById('authError').textContent=''; }
+
+async function submitAuth() {
+  const uname = document.getElementById('authUsername').value.trim();
+  if (!uname) { setAuthError('Enter a username'); return; }
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    if (authTab === 'register') {
+      const r = await fetch(`${API}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname})});
+      const d = await r.json();
+      if (!r.ok) { setAuthError(d.error); btn.disabled=false; btn.textContent='🎯 Create Account'; return; }
+      loginUser({username:uname, pullsLeft:d.pullsLeft||40, cooldownLeft:d.cooldownLeft||0, collection:[]});
+    } else {
+      const r = await fetch(`${API}/api/users/${encodeURIComponent(uname)}`);
+      const d = await r.json();
+      if (!r.ok) { setAuthError('Username not found'); btn.disabled=false; btn.textContent='🔓 Log In'; return; }
+      loginUser({username:uname, pullsLeft:d.pullsLeft||40, cooldownLeft:d.cooldownLeft||0, collection:d.collection||[]});
+    }
+  } catch(e) {
+    setAuthError('Server unavailable');
+    btn.disabled=false;
+    btn.textContent = authTab==='register' ? '🎯 Create Account' : '🔓 Log In';
+  }
+}
+
+function setAuthError(msg) { document.getElementById('authError').textContent = msg; }
+
+function loginUser(data) {
+  currentUser = data;
+  localStorage.setItem('bw_user', JSON.stringify(data));
+  // Merge server collection with local
+  if (data.collection && data.collection.length > 0) {
+    collection = data.collection;
+    localStorage.setItem('bw_collection', JSON.stringify(collection));
+  }
+  pullsLeft = data.pullsLeft;
+  if (data.cooldownLeft > 0) startCooldownUI(data.cooldownLeft);
+  updateNavUser();
+  updatePullsUI();
+  renderCollection();
+  closeAuthModal();
+  dismissWelcome();
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('bw_user');
+  updateNavUser();
+  pullsLeft = 40;
+  updatePullsUI();
+}
+
+function updateNavUser() {
+  const nu    = document.getElementById('navUser');
+  const nl    = document.getElementById('navLogout');
+  const nname = document.getElementById('navUsername');
+  const nsup  = document.getElementById('navSignupBtn');
+  const nlog  = document.getElementById('navLoginBtn');
+  if (currentUser) {
+    nu.style.display='flex'; nl.style.display='block';
+    nsup.style.display='none'; nlog.style.display='none';
+    nname.textContent = currentUser.username;
+    document.getElementById('welcome-banner').style.display='none';
+  } else {
+    nu.style.display='none'; nl.style.display='none';
+    nsup.style.display='block'; nlog.style.display='block';
+  }
+}
+
+// Auto-restore session
+if (currentUser) { updateNavUser(); updatePullsUI(); }
+
+/* ═══════════════════════════════════════════════
+   PULL LOGIC
+═══════════════════════════════════════════════ */
+function packClick() { triggerPull(1); }
+
+async function triggerPull(count) {
+  if (pulling) return;
+  if (!currentUser) { openAuthModal(); return; }
+  if (pullsLeft <= 0) return;
+  pulling = true;
+  setBtnsDisabled(true);
+  try {
+    const r = await fetch(`${API}/api/pull`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Username':currentUser.username},
+      body: JSON.stringify({count, username: currentUser.username})
+    });
+    const d = await r.json();
+    if (r.status === 429) {
+      startCooldownUI(d.cooldownLeft);
+      pulling = false; setBtnsDisabled(false); return;
+    }
+    if (!r.ok) { pulling=false; setBtnsDisabled(false); return; }
+    pullsLeft = d.pullsLeft;
+    pendingCards = d.cards;
+    updatePullsUI();
+    if (d.cooldownLeft > 0) startCooldownUI(d.cooldownLeft);
+    if (d.cards.length === 1) showSingleReveal(d.cards[0]);
+    else showMultiReveal(d.cards);
+  } catch(e) {
+    // Offline fallback
+    pulling = false; setBtnsDisabled(false);
+  }
+}
+
+function setBtnsDisabled(v) {
+  document.getElementById('btn1x').disabled = v || pullsLeft<=0;
+  document.getElementById('btn10x').disabled = v || pullsLeft<=0;
+}
+
+function updatePullsUI() {
+  document.getElementById('pullsLeft').textContent = pullsLeft;
+  document.getElementById('totalPulls').textContent = collection.length;
+  setBtnsDisabled(false);
+}
+
+/* ═══════════════════════════════════════════════
+   COOLDOWN COUNTDOWN
+═══════════════════════════════════════════════ */
+function startCooldownUI(sec) {
+  cooldownEnd = Date.now() + sec*1000;
+  setBtnsDisabled(true);
+  const barWrap = document.getElementById('cooldownBarWrap');
+  const bar     = document.getElementById('cooldownBar');
+  const txt     = document.getElementById('cooldownText');
+  barWrap.style.display = 'block'; txt.style.display = 'block';
+  if (cooldownTimer) clearInterval(cooldownTimer);
+  const total = sec;
+  cooldownTimer = setInterval(() => {
+    const left = Math.max(0, Math.ceil((cooldownEnd - Date.now())/1000));
+    const m = Math.floor(left/60), s = left%60;
+    txt.textContent = `⏳ Cooldown: ${m}:${s.toString().padStart(2,'0')}`;
+    bar.style.width = (left/total*100)+'%';
+    if (left <= 0) {
+      clearInterval(cooldownTimer);
+      barWrap.style.display='none'; txt.style.display='none';
+      pullsLeft = 40; updatePullsUI();
+    }
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════════════
+   CARD REVEAL
+═══════════════════════════════════════════════ */
+function showSingleReveal(card) {
+  const ov   = document.getElementById('reveal-overlay');
+  const sing = document.getElementById('reveal-single');
+  const multi= document.getElementById('reveal-multi');
+  const mb   = document.getElementById('collectBtnMulti');
+  const slot = document.getElementById('reveal-card-slot');
+  const ann  = document.getElementById('rarityAnnounce');
+  const cb   = document.getElementById('collectBtn');
+
+  multi.style.display='none'; mb.style.display='none';
+  sing.style.display='flex'; sing.classList.remove('show');
+  cb.classList.remove('show'); ann.classList.remove('pop'); ann.style.opacity='0';
+  slot.innerHTML='';
+
+  const flash = document.getElementById('rarity-flash');
+  flash.style.background = FLASH_C[card.rarity]||'rgba(74,158,255,.3)';
+  flash.style.animation='none'; void flash.offsetWidth;
+  flash.style.animation='rflash 1s ease both';
+  ov.classList.add('active');
+
+  const color = RC[card.rarity]||'#fff';
+  ann.style.color = color;
+  ann.style.textShadow = `0 0 28px ${color}`;
+  ann.textContent = card.rarity + (card.rarity==='LEGENDARY'?' 👑':card.rarity==='EPIC'?' 💜':'');
+
+  setTimeout(() => {
+    ann.style.opacity='1'; ann.classList.add('pop');
+    slot.appendChild(buildCard(card,240));
+    sing.classList.add('show');
+    setTimeout(() => cb.classList.add('show'), 380);
+  }, 180);
+}
+
+function showMultiReveal(cards) {
+  const ov   = document.getElementById('reveal-overlay');
+  const sing = document.getElementById('reveal-single');
+  const multi= document.getElementById('reveal-multi');
+  const mb   = document.getElementById('collectBtnMulti');
+
+  sing.style.display='none';
+  multi.style.display='flex'; multi.innerHTML='';
+  mb.style.display='none'; mb.classList.remove('show');
+
+  const sorted = [...cards].sort((a,b)=>(ORDER[a.rarity]||4)-(ORDER[b.rarity]||4));
+  const flash = document.getElementById('rarity-flash');
+  flash.style.background = FLASH_C[sorted[0].rarity];
+  flash.style.animation='none'; void flash.offsetWidth;
+  flash.style.animation='rflash 1s ease both';
+  ov.classList.add('active');
+
+  sorted.forEach((card,i) => {
+    const w = document.createElement('div');
+    w.className = 'rmw';
+    w.appendChild(buildCard(card,170));
+    multi.appendChild(w);
+    setTimeout(() => { w.classList.add('show'); w.style.animationDelay='0s'; }, 80+i*120);
+  });
+  setTimeout(() => { mb.style.display='block'; mb.classList.add('show'); }, 80+sorted.length*120+300);
+}
+
+function closeReveal() {
+  document.getElementById('reveal-overlay').classList.remove('active');
+  collection.push(...pendingCards);
+  localStorage.setItem('bw_collection', JSON.stringify(collection));
+  pendingCards=[];
+  renderCollection();
+  updatePullsUI();
+  loadFlexWall();
+  setBtnsDisabled(false);
+  pulling = false;
+  setTimeout(() => document.getElementById('collection-section').scrollIntoView({behavior:'smooth'}), 200);
+}
+
+/* ═══════════════════════════════════════════════
+   BUILD CARD
+═══════════════════════════════════════════════ */
+function buildCard(data, size=200, showDelete=false) {
+  const h = Math.round(size*308/220);
+  const isLeg = data.rarity==='LEGENDARY';
+  let sparkles='';
+  if (isLeg) for(let i=0;i<7;i++){const x=8+Math.random()*82,y=8+Math.random()*82,s=2.5+Math.random()*3.5,sd=1.5+Math.random()*2,ss=Math.random()*2;sparkles+=`<div class="sparkle" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;background:${data.rc};box-shadow:0 0 5px ${data.rc};--sd:${sd}s;--ss:${ss}s;"></div>`;}
+  const scene = document.createElement('div');
+  scene.className='card-scene'; scene.style.cssText=`width:${size}px;height:${h}px;`;
+  scene.dataset.rarity = data.rarity;
+  scene.innerHTML=`
+    <div class="card-body" style="--rc:${data.rc||'#4a9eff'};--rg:${data.rg||'rgba(74,158,255,.4)'};--cbg:${data.cbg||'linear-gradient(160deg,#0a1020,#050810)'};--ab:${data.ab||'linear-gradient(135deg,#0a1830,#050f20)'};--ag:${data.ag||'transparent'};${isLeg?'animation:legpulse 2.2s ease-in-out infinite;':''}">
+      <div class="card-front">
+        <div class="holo-l"></div><div class="shine-l"></div>
+        <div class="c-top"><div class="c-num">${data.num||'#???'}</div><div class="c-badge">${data.rarity}</div></div>
+        <div class="c-art"><div class="c-art-bg"></div>${sparkles}<div class="c-art-emoji" style="--rc:${data.rc||'#4a9eff'};">${data.emoji||'🎯'}</div></div>
+        <div class="c-name-row"><div class="c-bounty">${data.bounty||'Unknown'}</div><div class="c-reward">${data.reward||''}</div></div>
+        <div class="c-div"></div>
+        <div class="c-info">
+          <div class="c-hunter-row"><div class="c-avatar" style="background:${data.rc||'#4a9eff'};">${(data.hunter||'?').replace('@','').charAt(0).toUpperCase()}</div><div class="c-hunter">${data.hunter||'Unknown'}</div></div>
+          <div class="c-desc">${data.desc||''}</div>
+        </div>
+        <div class="c-bottom"><div class="c-stars">${data.stars||'★☆☆☆☆'}</div>${data.proof?`<a class="c-proof" href="${data.proof}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Proof ↗</a>`:'<span style="font-size:.5rem;color:rgba(255,255,255,.2);">On file</span>'}</div>
+      </div>
+      <div class="card-back"><div class="back-pat"></div><div class="back-circ">B</div><div class="back-name">BOUNTYWORK</div><div class="back-tick">$BOUNTYWORK</div><div class="back-ca">J4x1EMmQjF6WEzXq2tUtzY89x5aMhYz5CzfevcJEpump</div></div>
+    </div>`;
+  if (showDelete) {
+    // Select overlay (for multi-select mode)
+    const iid = data.instanceId || data.id || '';
+    if (iid) scene.dataset.iid = iid;
+    const selOv = document.createElement('div');
+    selOv.className = 'card-sel-overlay';
+    selOv.addEventListener('click', e => { e.stopPropagation(); if (selectMode) toggleCardSelect(iid, scene); });
+    const chk = document.createElement('div');
+    chk.className = 'sel-check'; chk.textContent = '✓';
+    selOv.appendChild(chk);
+    scene.appendChild(selOv);
+
+    // Trash button
+    const btn = document.createElement('button');
+    btn.className = 'trash-btn'; btn.title = 'Discard card'; btn.textContent = '🗑️';
+    btn.addEventListener('click', e => { e.stopPropagation(); if (!selectMode) showDiscardConfirm(scene); });
+    scene.appendChild(btn);
+    // Confirm overlay
+    const conf = document.createElement('div');
+    conf.className = 'discard-confirm';
+    conf.innerHTML = `<div class="dc-icon">🗑️</div><div class="dc-txt">Discard this card?</div><div class="dc-sub">This cannot be undone.</div><div class="dc-btns"><button class="dc-yes">Discard</button><button class="dc-no">Cancel</button></div>`;
+    conf.querySelector('.dc-yes').addEventListener('click', e => { e.stopPropagation(); executeDiscard(scene, data); });
+    conf.querySelector('.dc-no').addEventListener('click', e => { e.stopPropagation(); conf.classList.remove('show'); });
+    scene.appendChild(conf);
+  }
+  attachTilt(scene); return scene;
+}
+
+function attachTilt(scene) {
+  const body=scene.querySelector('.card-body'), holo=scene.querySelector('.holo-l'), shine=scene.querySelector('.shine-l');
+  let flipped=false, raf=null;
+  function tilt(px,py){
+    const rx=(py-.5)*25, ry=-(px-.5)*25;
+    body.style.transform=flipped
+      ?`perspective(800px) rotateY(${180+ry*2}deg) rotateX(${-rx}deg) scale3d(1.05,1.05,1.05)`
+      :`perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.05,1.05,1.05)`;
+    const mx=px*100,my=py*100;
+    holo.style.background=`conic-gradient(from ${(px+py)*180}deg at ${mx}% ${my}%,rgba(255,0,128,.26),rgba(255,200,0,.26),rgba(0,255,128,.26),rgba(0,128,255,.26),rgba(200,0,255,.26),rgba(255,0,128,.26))`;
+    shine.style.background=`radial-gradient(circle at ${mx}% ${my}%,rgba(255,255,255,.15) 0%,rgba(255,255,255,.04) 40%,transparent 70%)`;
+  }
+  scene.addEventListener('mousemove',e=>{if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const r=scene.getBoundingClientRect();tilt((e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height);});});
+  scene.addEventListener('mouseleave',()=>{if(raf)cancelAnimationFrame(raf);body.classList.add('ease');body.style.transform=flipped?'rotateY(180deg)':'';setTimeout(()=>body.classList.remove('ease'),580);});
+  scene.addEventListener('click',()=>{body.classList.add('ease');flipped=!flipped;body.style.transform=flipped?'rotateY(180deg)':'';setTimeout(()=>body.classList.remove('ease'),580);});
+}
+
+/* ═══════════════════════════════════════════════
+   COLLECTION
+═══════════════════════════════════════════════ */
+function renderCollection() {
+  const grid = document.getElementById('coll-grid');
+  const badge= document.getElementById('collBadge');
+  const filt = collFilter==='all' ? collection : collection.filter(c=>c.rarity===collFilter);
+  badge.textContent = `${collection.length} card${collection.length!==1?'s':''}`;
+  if (!filt.length) {
+    grid.innerHTML=collection.length
+      ?`<div class="empty-coll"><div>🔍</div><div style="margin-top:.4rem;">No ${collFilter} cards yet.</div></div>`
+      :`<div class="empty-coll"><div>🎯</div><div style="margin-top:.4rem;">Pull cards to start your collection!</div></div>`;
+    return;
+  }
+  const sorted=[...filt].sort((a,b)=>(ORDER[a.rarity]||4)-(ORDER[b.rarity]||4));
+  const frag=document.createDocumentFragment();
+  sorted.forEach(c=>{
+    const el=buildCard(c,190,true);
+    if (selectMode) el.classList.add('sel-mode');
+    if (c.instanceId && selectedCards.has(c.instanceId)) el.classList.add('sel-active');
+    frag.appendChild(el);
+  });
+  grid.innerHTML='';
+  grid.classList.toggle('sel-mode', selectMode);
+  grid.appendChild(frag);
+}
+
+document.querySelectorAll('.cfilt').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.cfilt').forEach(b=>{b.classList.remove('active');b.style.background='transparent';});
+    btn.classList.add('active');
+    const c={LEGENDARY:'#f5c542',EPIC:'#c084fc',RARE:'#60a5fa',UNCOMMON:'#4ade80',COMMON:'#9ca3af'}[btn.dataset.cf];
+    btn.style.background=c?c:'rgba(170,170,170,.18)';
+    btn.style.color=c?'#000':'#aaa';
+    collFilter=btn.dataset.cf; renderCollection();
+  });
+});
+
+/* ═══════════════════════════════════════════════
+   WELCOME BANNER
+═══════════════════════════════════════════════ */
+function initWelcomeBanner() {
+  if (!currentUser && !localStorage.getItem('bw_dismissed_welcome')) {
+    document.getElementById('welcome-banner').style.display = 'flex';
+  }
+}
+function dismissWelcome() {
+  document.getElementById('welcome-banner').style.display = 'none';
+  localStorage.setItem('bw_dismissed_welcome','1');
+}
+
+/* ═══════════════════════════════════════════════
+   MULTI-SELECT DELETE
+═══════════════════════════════════════════════ */
+let selectMode = false;
+let selectedCards = new Set();
+
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedCards.clear();
+  const btn  = document.getElementById('selectToggle');
+  const bar  = document.getElementById('bulk-bar');
+  btn.textContent = selectMode ? '✕ Cancel' : '☑ Select';
+  btn.classList.toggle('active', selectMode);
+  bar.classList.toggle('visible', selectMode);
+  updateBulkBar();
+  renderCollection();
+}
+
+function toggleCardSelect(iid, scene) {
+  if (!iid) return;
+  if (selectedCards.has(iid)) {
+    selectedCards.delete(iid);
+    scene.classList.remove('sel-active');
+  } else {
+    selectedCards.add(iid);
+    scene.classList.add('sel-active');
+  }
+  updateBulkBar();
+}
+
+function selectAllCards() {
+  const filt = collFilter==='all' ? collection : collection.filter(c=>c.rarity===collFilter);
+  filt.forEach(c => { if (c.instanceId) selectedCards.add(c.instanceId); });
+  document.querySelectorAll('#coll-grid .card-scene[data-iid]').forEach(s => s.classList.add('sel-active'));
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  document.getElementById('selectedCount').textContent = selectedCards.size;
+  document.getElementById('bulkDeleteBtn').disabled = selectedCards.size === 0;
+}
+
+async function bulkDiscard() {
+  const count = selectedCards.size;
+  if (!count) return;
+  if (!confirm(`Discard ${count} card${count>1?'s':''}? This cannot be undone.`)) return;
+
+  const ids = Array.from(selectedCards);
+  collection = collection.filter(c => !ids.includes(c.instanceId));
+  localStorage.setItem('bw_collection', JSON.stringify(collection));
+
+  if (currentUser) {
+    for (const iid of ids) {
+      try {
+        await fetch(`${API}/api/discard`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Username':currentUser.username},
+          body: JSON.stringify({instanceId:iid, username:currentUser.username})
+        });
+      } catch(e) {}
+    }
+  }
+
+  selectedCards.clear();
+  selectMode = false;
+  document.getElementById('selectToggle').textContent = '☑ Select';
+  document.getElementById('selectToggle').classList.remove('active');
+  document.getElementById('bulk-bar').classList.remove('visible');
+  renderCollection();
+  updateBulkBar();
+}
+
+/* ═══════════════════════════════════════════════
+   DISCARD / TRASH
+═══════════════════════════════════════════════ */
+function showDiscardConfirm(scene) {
+  scene.querySelector('.discard-confirm').classList.add('show');
+}
+
+async function executeDiscard(scene, data) {
+  // Animate out
+  scene.classList.add('discarding');
+
+  // Remove from local array
+  const iid = data.instanceId;
+  const idx = iid
+    ? collection.findIndex(c => c.instanceId === iid)
+    : collection.findIndex(c => c.bounty === data.bounty && c.rarity === data.rarity);
+  if (idx !== -1) collection.splice(idx, 1);
+  localStorage.setItem('bw_collection', JSON.stringify(collection));
+
+  // Hit server
+  if (currentUser && iid) {
+    try {
+      await fetch(`${API}/api/discard`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-Username':currentUser.username},
+        body: JSON.stringify({instanceId: iid, username: currentUser.username})
+      });
+    } catch(e) {}
+  }
+
+  // Re-render after animation
+  setTimeout(() => renderCollection(), 460);
+}
+
+function clearCollection() {
+  if (!collection.length) return;
+  if (!confirm('Clear your entire local collection?')) return;
+  collection=[]; localStorage.removeItem('bw_collection'); renderCollection();
+}
+
+/* ═══════════════════════════════════════════════
+   FLEX WALL
+═══════════════════════════════════════════════ */
+async function loadFlexWall() {
+  try {
+    const r = await fetch(`${API}/api/users`);
+    if (!r.ok) return;
+    const users = await r.json();
+    renderFlexWall(users);
+  } catch(e) {}
+}
+
+function renderFlexWall(users) {
+  const grid = document.getElementById('flexGrid');
+  if (!users.length) {
+    grid.innerHTML='<div class="empty-flex"><div style="font-size:2rem;margin-bottom:.5rem;">🎯</div><div>No hunters yet — be the first!</div></div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  users.forEach(u => {
+    const top = u.topCard;
+    const rarityColor = top ? (RC[top.rarity]||'#aaa') : '#aaa';
+    const div = document.createElement('div');
+    div.className='flex-card';
+    div.innerHTML=`
+      <div class="flex-card-top">
+        <div class="flex-avatar">${u.username.charAt(0).toUpperCase()}</div>
+        <div>
+          <div class="flex-username">${u.username}</div>
+          <div class="flex-total">${u.totalCards} card${u.totalCards!==1?'s':''}</div>
+        </div>
+      </div>
+      ${top?`
+        <div class="flex-top-card">
+          <div class="flex-top-emoji">${top.emoji||'🎯'}</div>
+          <div class="flex-top-info">
+            <div class="ftc-name">${top.bounty}</div>
+            <div class="ftc-rarity" style="color:${rarityColor};">${top.rarity}</div>
+          </div>
+        </div>
+      `:'<div style="color:var(--muted);font-size:.75rem;margin-bottom:.75rem;">No cards yet</div>'}
+      <div class="flex-stats">
+        ${u.legendaries?`<div class="flex-stat" style="color:#f5c542;border-color:rgba(245,197,66,.4);">👑 ${u.legendaries}</div>`:''}
+        ${u.epics?`<div class="flex-stat" style="color:#c084fc;border-color:rgba(192,132,252,.4);">💜 ${u.epics}</div>`:''}
+        ${u.rares?`<div class="flex-stat" style="color:#60a5fa;border-color:rgba(96,165,250,.4);">💙 ${u.rares}</div>`:''}
+      </div>
+    `;
+    frag.appendChild(div);
+  });
+  grid.innerHTML=''; grid.appendChild(frag);
+}
+
+/* ═══════════════════════════════════════════════
+   POOL STATUS
+═══════════════════════════════════════════════ */
+async function loadPool() {
+  try {
+    const r = await fetch(`${API}/api/pool`);
+    if (!r.ok) return;
+    const d = await r.json();
+    poolSize = (d.pool||[]).length;
+    document.getElementById('poolStatus').textContent = `${poolSize} cards in the current pool · New cards auto-drop every 20-75 min`;
+  } catch(e) {
+    document.getElementById('poolStatus').textContent = 'Card pool ready';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   INIT + POLLING
+═══════════════════════════════════════════════ */
+renderCollection();
+loadFlexWall();
+loadPool();
+updatePullsUI();
+initWelcomeBanner();
+
+// Refresh flex wall and pool every 60 seconds
+setInterval(() => { loadFlexWall(); loadPool(); }, 60000);
+
+// Restore user state
+if (currentUser) {
+  updateNavUser();
+  fetch(`${API}/api/users/${encodeURIComponent(currentUser.username)}`).then(r=>r.json()).then(d=>{
+    if (d.pullsLeft !== undefined) {
+      pullsLeft = d.pullsLeft;
+      if (d.cooldownLeft > 0) startCooldownUI(d.cooldownLeft);
+      updatePullsUI();
+    }
+  }).catch(()=>{});
+}
+
+/* ═══════════════════════════════════════════════
+   BACKGROUND PARTICLES
+═══════════════════════════════════════════════ */
+const canvas=document.getElementById('bg-canvas'), ctx=canvas.getContext('2d');
+let W,H,dots=[];
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;}
+resize(); window.addEventListener('resize',()=>{resize();initDots();});
+function initDots(){dots=Array.from({length:55},()=>({x:Math.random()*W,y:Math.random()*H,r:.3+Math.random()*1.1,dx:(Math.random()-.5)*.17,dy:(Math.random()-.5)*.17,a:.05+Math.random()*.28,h:Math.random()>.6?200:Math.random()>.5?45:280}));}
+initDots();
+(function loop(){ctx.clearRect(0,0,W,H);for(const d of dots){ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fillStyle=`hsla(${d.h},90%,70%,${d.a})`;ctx.fill();d.x+=d.dx;d.y+=d.dy;if(d.x<0||d.x>W)d.dx*=-1;if(d.y<0||d.y>H)d.dy*=-1;}requestAnimationFrame(loop);})();
+
+// Handle Enter key in auth modal
+document.getElementById('authUsername').addEventListener('keydown',e=>{if(e.key==='Enter')submitAuth();});
+</script>
+</body>
+</html>
