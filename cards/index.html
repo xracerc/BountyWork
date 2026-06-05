@@ -291,10 +291,9 @@
     .collect-btn.show{opacity:1;pointer-events:all;animation:fadein .4s .2s ease both;}
     .collect-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(74,158,255,.7);}
 
-    /* ════════════ COMMUNITY FLEX ════════════ */
+    /* ════════════ FLEX WALL ════════════ */
     #flex-section{
-      position:relative;z-index:1;
-      padding:5rem 1.5rem;
+      position:relative;z-index:1;padding:4rem 1.5rem;
       border-top:1px solid rgba(245,197,66,.1);
       background:linear-gradient(180deg,transparent,rgba(245,197,66,.03) 30%,rgba(245,197,66,.03) 70%,transparent);
     }
@@ -302,35 +301,78 @@
     .section-tag{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;}
     .section-title{font-family:'Anton',sans-serif;font-size:clamp(1.8rem,4vw,3.5rem);letter-spacing:.03em;color:white;text-shadow:2px 2px 0 #001030,0 0 22px rgba(245,197,66,.4);}
 
-    .flex-grid{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;max-width:1100px;margin:0 auto;}
-    .flex-card{
-      background:var(--bg2);border:1.5px solid rgba(245,197,66,.15);border-radius:16px;
-      padding:1.25rem;width:220px;transition:border-color .2s,transform .2s,box-shadow .2s;
-      cursor:pointer;
+    .flex-podium{display:flex;align-items:flex-end;justify-content:center;gap:1.25rem;flex-wrap:wrap;max-width:900px;margin:0 auto;}
+
+    .flex-spot{
+      background:var(--bg2);border-radius:18px;padding:1.5rem 1.25rem;
+      cursor:pointer;transition:transform .2s,box-shadow .2s;
+      display:flex;flex-direction:column;align-items:center;gap:.65rem;text-align:center;
     }
-    .flex-card:hover{border-color:rgba(245,197,66,.45);transform:translateY(-3px);box-shadow:0 8px 24px rgba(245,197,66,.1);}
-    .flex-card-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.85rem;}
-    .flex-avatar{
-      width:38px;height:38px;border-radius:50%;
-      background:linear-gradient(135deg,var(--gold),#ff7b00);
-      display:flex;align-items:center;justify-content:center;
-      font-family:'Anton',sans-serif;font-size:1.1rem;color:#000;flex-shrink:0;
-      box-shadow:0 0 12px rgba(245,197,66,.4);
-    }
-    .flex-username{font-weight:800;font-size:.95rem;color:white;}
-    .flex-total{font-size:.7rem;color:var(--muted);}
-    .flex-top-card{
-      background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:10px;
-      padding:.65rem .75rem;display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem;
-    }
-    .flex-top-emoji{font-size:1.6rem;}
-    .flex-top-info .ftc-name{font-size:.78rem;font-weight:700;color:white;line-height:1.2;}
-    .flex-top-info .ftc-rarity{font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
-    .flex-stats{display:flex;gap:.4rem;flex-wrap:wrap;}
-    .flex-stat{
-      font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:999px;border:1.5px solid;
-    }
+    .flex-spot:hover{transform:translateY(-6px);}
+    .flex-spot.r1{border:2px solid rgba(245,197,66,.6);width:270px;
+      box-shadow:0 0 30px rgba(245,197,66,.18);}
+    .flex-spot.r1:hover{box-shadow:0 10px 40px rgba(245,197,66,.35);}
+    .flex-spot.r2{border:2px solid rgba(192,132,252,.4);width:220px;margin-bottom:1.5rem;
+      box-shadow:0 0 14px rgba(192,132,252,.08);}
+    .flex-spot.r2:hover{box-shadow:0 8px 28px rgba(192,132,252,.22);}
+    .flex-spot.r3{border:2px solid rgba(96,165,250,.35);width:220px;margin-bottom:1.5rem;
+      box-shadow:0 0 14px rgba(96,165,250,.08);}
+    .flex-spot.r3:hover{box-shadow:0 8px 28px rgba(96,165,250,.22);}
+
+    .rank-crown{font-size:1.6rem;line-height:1;}
+    .rank-num{font-family:'Anton',sans-serif;font-size:1.8rem;letter-spacing:.04em;}
+    .r1 .rank-num{color:#f5c542;text-shadow:0 0 14px rgba(245,197,66,.6);}
+    .r2 .rank-num{color:#c084fc;}
+    .r3 .rank-num{color:#60a5fa;}
+
+    .flex-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-family:'Anton',sans-serif;font-size:1.4rem;color:#000;}
+    .r1 .flex-av{background:linear-gradient(135deg,#f5c542,#ff7b00);box-shadow:0 0 16px rgba(245,197,66,.5);}
+    .r2 .flex-av{background:linear-gradient(135deg,#c084fc,#9333ea);box-shadow:0 0 12px rgba(192,132,252,.4);}
+    .r3 .flex-av{background:linear-gradient(135deg,#60a5fa,#2563eb);box-shadow:0 0 12px rgba(96,165,250,.4);}
+
+    .flex-uname{font-weight:900;font-size:.95rem;color:white;}
+    .flex-leg-count{font-size:.78rem;font-weight:800;}
+    .r1 .flex-leg-count{color:#f5c542;}
+    .r2 .flex-leg-count{color:#c084fc;}
+    .r3 .flex-leg-count{color:#60a5fa;}
+
+    .flex-card-preview{background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:10px;
+      padding:.55rem .75rem;display:flex;align-items:center;gap:.55rem;width:100%;}
+    .fcp-emoji{font-size:1.3rem;}
+    .fcp-name{font-size:.7rem;font-weight:700;color:white;text-align:left;line-height:1.3;}
+    .fcp-rarity{font-size:.56rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;text-align:left;}
+    .view-hint{font-size:.62rem;color:var(--muted);letter-spacing:.04em;}
     .empty-flex{text-align:center;color:var(--muted);padding:3rem;width:100%;}
+
+    /* ── Profile popup ── */
+    #pp-overlay{position:fixed;inset:0;z-index:599;background:rgba(4,5,15,.55);backdrop-filter:blur(4px);display:none;}
+    #pp-overlay.open{display:block;}
+    #profile-popup{
+      position:fixed;top:50%;left:50%;
+      transform:translate(-50%,-54%) scale(.94);
+      z-index:600;opacity:0;pointer-events:none;
+      background:var(--bg2);border:1.5px solid rgba(245,197,66,.3);border-radius:20px;
+      padding:1.5rem;width:min(460px,90vw);max-height:68vh;
+      display:flex;flex-direction:column;
+      box-shadow:0 24px 60px rgba(0,0,0,.6);
+      transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    #profile-popup.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all;}
+    .pp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-shrink:0;}
+    .pp-user{display:flex;align-items:center;gap:.65rem;}
+    .pp-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f5c542,#ff7b00);
+      display:flex;align-items:center;justify-content:center;font-family:'Anton',sans-serif;font-size:1.1rem;color:#000;}
+    .pp-name{font-weight:900;font-size:.95rem;color:white;}
+    .pp-stat{font-size:.7rem;color:var(--muted);margin-top:.1rem;}
+    .pp-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;transition:color .15s;}
+    .pp-close:hover{color:white;}
+    .pp-scroll{overflow-y:auto;flex:1;padding-right:.25rem;}
+    .pp-scroll::-webkit-scrollbar{width:3px;}
+    .pp-scroll::-webkit-scrollbar-thumb{background:rgba(245,197,66,.3);border-radius:2px;}
+    .pp-rlabel{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--muted);margin:.75rem 0 .35rem;}
+    .pp-row{display:flex;flex-wrap:wrap;gap:.4rem;}
 
     /* ════════════ MY COLLECTION ════════════ */
     #collection-section{position:relative;z-index:1;padding:4rem 1.5rem 6rem;border-top:1px solid rgba(74,158,255,.1);}
@@ -766,19 +808,35 @@
 <!-- ═══ COMMUNITY FLEX ═══ -->
 <section id="flex-section">
   <div class="flex-header">
-    <div class="section-tag">Community</div>
-    <div class="section-title">🏆 FLEX WALL</div>
-    <p style="color:var(--muted);font-size:.9rem;margin-top:.5rem;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.65;">
-      The hunters who pulled the rarest cards. Sign up and earn your spot.
+    <div class="section-tag">Leaderboard</div>
+    <div class="section-title">👑 FLEX WALL</div>
+    <p style="color:var(--muted);font-size:.88rem;margin-top:.5rem;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.65;">
+      Top 3 hunters by legendary card count. Pull a Legendary to claim your spot.
     </p>
   </div>
-  <div class="flex-grid" id="flexGrid">
+  <div class="flex-podium" id="flexGrid">
     <div class="empty-flex">
-      <div style="font-size:2rem;margin-bottom:.5rem;">🎯</div>
-      <div>No hunters yet — be the first to sign up!</div>
+      <div style="font-size:2.5rem;margin-bottom:.5rem;">👑</div>
+      <div>No legendary hunters yet — will you be first?</div>
     </div>
   </div>
 </section>
+
+<!-- ═══ PROFILE POPUP ═══ -->
+<div id="pp-overlay" onclick="closeProfilePopup()"></div>
+<div id="profile-popup">
+  <div class="pp-head">
+    <div class="pp-user">
+      <div class="pp-av" id="ppAv">?</div>
+      <div>
+        <div class="pp-name" id="ppName">Hunter</div>
+        <div class="pp-stat" id="ppStat"></div>
+      </div>
+    </div>
+    <button class="pp-close" onclick="closeProfilePopup()">✕</button>
+  </div>
+  <div class="pp-scroll" id="ppCards"></div>
+</div>
 
 <!-- ═══ CHAT ═══ -->
 <section id="chat-section">
@@ -1728,44 +1786,107 @@ async function loadFlexWall() {
   } catch(e) {}
 }
 
+const RANK_CLASS  = ['r1','r2','r3'];
+const RANK_CROWN  = ['👑','🥈','🥉'];
+const RANK_LABEL  = ['#1','#2','#3'];
+
 function renderFlexWall(users) {
   const grid = document.getElementById('flexGrid');
   if (!users.length) {
-    grid.innerHTML='<div class="empty-flex"><div style="font-size:2rem;margin-bottom:.5rem;">🎯</div><div>No hunters yet — be the first!</div></div>';
+    grid.innerHTML='<div class="empty-flex"><div style="font-size:2.5rem;margin-bottom:.5rem;">👑</div><div>No legendary hunters yet — will you be first?</div></div>';
     return;
   }
+  // Order for podium: #2 left, #1 center, #3 right
+  const ordered = users.length >= 3
+    ? [users[1], users[0], users[2]]
+    : users.length === 2 ? [users[1], users[0]] : [users[0]];
+  const rankFor  = (u) => users.indexOf(u); // 0=first
+
   const frag = document.createDocumentFragment();
-  users.forEach(u => {
-    const top = u.topCard;
-    const rarityColor = top ? (RC[top.rarity]||'#aaa') : '#aaa';
-    const div = document.createElement('div');
-    div.className='flex-card';
-    div.innerHTML=`
-      <div class="flex-card-top">
-        <div class="flex-avatar">${u.username.charAt(0).toUpperCase()}</div>
+  ordered.forEach(u => {
+    const rank = rankFor(u);
+    const rc   = RANK_CLASS[rank];
+    const top  = u.topCard;
+    const div  = document.createElement('div');
+    div.className = `flex-spot ${rc}`;
+    div.dataset.username = u.username;
+    div.onclick = () => openUserProfile(u.username);
+    div.innerHTML = `
+      <div class="rank-crown">${RANK_CROWN[rank]}</div>
+      <div class="rank-num">${RANK_LABEL[rank]}</div>
+      <div class="flex-av">${u.username.charAt(0).toUpperCase()}</div>
+      <div class="flex-uname">${esc(u.username)}</div>
+      <div class="flex-leg-count">👑 ${u.legendaries} Legendary${u.legendaries!==1?'s':''}</div>
+      ${top ? `<div class="flex-card-preview">
+        <div class="fcp-emoji">${top.emoji||'🎯'}</div>
         <div>
-          <div class="flex-username">${u.username}</div>
-          <div class="flex-total">${u.totalCards} card${u.totalCards!==1?'s':''}</div>
+          <div class="fcp-name">${esc(top.bounty||'')}</div>
+          <div class="fcp-rarity" style="color:${RC[top.rarity]||'#aaa'};">${top.rarity}</div>
         </div>
-      </div>
-      ${top?`
-        <div class="flex-top-card">
-          <div class="flex-top-emoji">${top.emoji||'🎯'}</div>
-          <div class="flex-top-info">
-            <div class="ftc-name">${top.bounty}</div>
-            <div class="ftc-rarity" style="color:${rarityColor};">${top.rarity}</div>
-          </div>
-        </div>
-      `:'<div style="color:var(--muted);font-size:.75rem;margin-bottom:.75rem;">No cards yet</div>'}
-      <div class="flex-stats">
-        ${u.legendaries?`<div class="flex-stat" style="color:#f5c542;border-color:rgba(245,197,66,.4);">👑 ${u.legendaries}</div>`:''}
-        ${u.epics?`<div class="flex-stat" style="color:#c084fc;border-color:rgba(192,132,252,.4);">💜 ${u.epics}</div>`:''}
-        ${u.rares?`<div class="flex-stat" style="color:#60a5fa;border-color:rgba(96,165,250,.4);">💙 ${u.rares}</div>`:''}
-      </div>
+      </div>` : ''}
+      <div class="view-hint">Tap to view collection →</div>
     `;
     frag.appendChild(div);
   });
   grid.innerHTML=''; grid.appendChild(frag);
+}
+
+/* ── Profile popup ── */
+async function openUserProfile(username) {
+  // Show loading state
+  document.getElementById('ppAv').textContent  = username.charAt(0).toUpperCase();
+  document.getElementById('ppName').textContent = username;
+  document.getElementById('ppStat').textContent = 'Loading...';
+  document.getElementById('ppCards').innerHTML  = '<div style="text-align:center;color:var(--muted);padding:2rem;font-size:.82rem;">Loading cards...</div>';
+  document.getElementById('pp-overlay').classList.add('open');
+  document.getElementById('profile-popup').classList.add('open');
+
+  try {
+    const r = await fetch(`${API}/api/users/${encodeURIComponent(username)}`);
+    const d = await r.json();
+    if (!r.ok) { document.getElementById('ppStat').textContent='Could not load'; return; }
+
+    const coll = d.collection || [];
+    const legs = coll.filter(c=>c.rarity==='LEGENDARY');
+    const epics= coll.filter(c=>c.rarity==='EPIC');
+    const rares= coll.filter(c=>c.rarity==='RARE');
+
+    document.getElementById('ppStat').textContent =
+      `${coll.length.toLocaleString()} cards · 👑 ${legs.length} · 💜 ${epics.length} · 💙 ${rares.length}`;
+
+    const scroll = document.getElementById('ppCards');
+    scroll.innerHTML = '';
+
+    const sections = [
+      {label:'👑 Legendary', cards:legs, color:'#f5c542'},
+      {label:'💜 Epic',      cards:epics,color:'#c084fc'},
+      {label:'💙 Rare',      cards:rares,color:'#60a5fa'},
+    ];
+
+    sections.forEach(({label, cards, color}) => {
+      if (!cards.length) return;
+      const lbl = document.createElement('div');
+      lbl.className = 'pp-rlabel';
+      lbl.style.color = color;
+      lbl.textContent = `${label} (${cards.length})`;
+      scroll.appendChild(lbl);
+      const row = document.createElement('div');
+      row.className = 'pp-row';
+      cards.forEach(c => row.appendChild(buildCard(c, 120)));
+      scroll.appendChild(row);
+    });
+
+    if (!legs.length && !epics.length && !rares.length) {
+      scroll.innerHTML = '<div style="text-align:center;color:var(--muted);padding:2rem;font-size:.82rem;">No Legendary, Epic or Rare cards yet.</div>';
+    }
+  } catch(e) {
+    document.getElementById('ppStat').textContent = 'Error loading';
+  }
+}
+
+function closeProfilePopup() {
+  document.getElementById('pp-overlay').classList.remove('open');
+  document.getElementById('profile-popup').classList.remove('open');
 }
 
 /* ═══════════════════════════════════════════════

@@ -306,8 +306,10 @@ class Handler(BaseHTTPRequestHandler):
                     "rares":       sum(1 for c in coll if c.get("rarity")=="RARE"),
                     "joinedAt": u.get("joinedAt",""),
                 })
-            flex.sort(key=lambda x: (-(x["legendaries"]*1000 + x["epics"]*100 + x["rares"]*10 + x["totalCards"])))
-            self.json_resp(200, flex)
+            # Only users with at least 1 legendary, sorted by legendary count, top 3
+            flex = [f for f in flex if f.get("legendaries",0) > 0]
+            flex.sort(key=lambda x: (-x.get("legendaries",0), -x.get("totalCards",0)))
+            self.json_resp(200, flex[:3])
 
         # ── GET /api/users/:name ────────────────────────────────
         elif p.startswith("/api/users/"):
