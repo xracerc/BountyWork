@@ -15,6 +15,8 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+# DATA_DIR: set via Render env var to a persistent disk path (e.g. /data)
+# If not set, falls back to the app directory (data lost on redeploy)
 DATA_DIR   = os.environ.get("DATA_DIR", BASE_DIR)
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 POOL_FILE  = os.path.join(DATA_DIR, "pool.json")
@@ -629,21 +631,14 @@ class Handler(BaseHTTPRequestHandler):
 
 # ── Init & run ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # Seed the pool on first run
-    if not os.path.exists(POOL_FILE):
-        p = {"pool":[],"lastRare":0,"lastEpic":0,"lastLeg":0}
-        for r in ["COMMON","COMMON","UNCOMMON","UNCOMMON","RARE","RARE","RARE","EPIC","LEGENDARY"]:
-            p["pool"].append(mint_card(r))
-        save_pool(p)
-        print(f"[{_ts()}] Pool seeded with {len(p['pool'])} cards")
-
-    if not os.path.exists(USERS_FILE):
-        save_users({"users":{}})
+    # Ensure data directory exists (important when using a Render disk at /data)
+    os.makedirs(DATA_DIR, exist_ok=True)
 
     print("="*55)
     print("BOUNTYWORK CARDS SERVER")
     print("="*55)
     print(f"  Port           : {PORT}")
+    print(f"  Data dir       : {DATA_DIR}")
     print(f"  Starting rolls : {STARTING_ROLLS}")
     print(f"  Max rolls      : {MAX_ROLLS}")
     print(f"  Max locker     : {MAX_LOCKER}")
@@ -653,8 +648,28 @@ if __name__ == "__main__":
     print(f"  Template pool  : {sum(len(v) for v in TEMPLATES.values())} unique cards")
     print("="*55)
 
-    # Run an immediate drop on startup
-    run_drop_cycle()
+    # ── USERS: load existing or create fresh (NEVER overwrites existing data) ──
+    if os.path.exists(USERS_FILE):
+        d = load_users()
+        total = len(d.get("users",{}))
+        print(f"  Loaded {total} existing user(s) from {USERS_FILE}")
+    else:
+        save_users({"users":{}})
+        print(f"  Created fresh users file at {USERS_FILE}")
+
+    # ── POOL: load existing or seed fresh ──────────────────────────────────────
+    if os.path.exists(POOL_FILE):
+        p = load_pool()
+        print(f"  Loaded existing pool ({len(p.get('pool',[]))} cards)")
+    else:
+        save_pool({"pool":[], "usedTemplates":[], "lastCycle":0})
+        print(f"  Created fresh pool — running initial drop...")
+        run_drop_cycle()
+
+    # ── CHAT: load existing or create fresh ────────────────────────────────────
+    if not os.path.exists(CHAT_FILE):
+        save_chat({"messages":[]})
+
     threading.Thread(target=scheduler_loop, daemon=True).start()
 
     server = HTTPServer(("0.0.0.0", PORT), Handler)
