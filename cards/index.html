@@ -1375,6 +1375,8 @@ function updateLockerBadge(){
 ═══════════════════════════════════════════════ */
 let chatMessages=[], lastChatTs='', chatPollTimer=null;
 let pendingGif='', pendingFlexCard=null;
+const shownMsgIds = new Set(); // prevents duplicate renders
+let chatReady = false;         // only show legendary toasts AFTER initial load
 
 async function loadChat(initial=false) {
   try {
@@ -1382,15 +1384,26 @@ async function loadChat(initial=false) {
     const r=await fetch(url);
     if(!r.ok) return;
     const d=await r.json();
-    const msgs=d.messages||[];
-    if(!msgs.length) { if(initial) renderChat([]); return; }
-    if(initial) chatMessages=msgs;
-    else chatMessages=[...chatMessages,...msgs].slice(-200);
-    if(msgs.length) lastChatTs=msgs[msgs.length-1].timestamp;
-    renderChat(msgs, !initial);
-    // Check for legendary alerts
-    msgs.filter(m=>m.type==='legendary_alert').forEach(m=>showLegToast(m.text));
-  } catch(e){ if(initial) renderChat([]); }
+    const allMsgs=d.messages||[];
+
+    // Filter out any messages already shown (prevents duplicates on every poll)
+    const newMsgs = allMsgs.filter(m => !shownMsgIds.has(m.id));
+    newMsgs.forEach(m => shownMsgIds.add(m.id));
+
+    if(!newMsgs.length) { if(initial) renderChat([]); return; }
+
+    if(initial) chatMessages=newMsgs;
+    else chatMessages=[...chatMessages,...newMsgs].slice(-200);
+
+    if(newMsgs.length) lastChatTs=newMsgs[newMsgs.length-1].timestamp;
+    renderChat(newMsgs, !initial);
+
+    // Only show legendary toasts for NEW messages AFTER initial load
+    if(chatReady) {
+      newMsgs.filter(m=>m.type==='legendary_alert').forEach(m=>showLegToast(m.text));
+    }
+    if(initial) chatReady=true;
+  } catch(e){ if(initial){ renderChat([]); chatReady=true; } }
 }
 
 function renderChat(newMsgs, append=false) {
@@ -1398,9 +1411,13 @@ function renderChat(newMsgs, append=false) {
   const wasAtBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
   if(!append) {
     box.innerHTML='';
-    (chatMessages.length?chatMessages:[]).forEach(m=>box.appendChild(buildChatMsg(m)));
+    (chatMessages.length?chatMessages:[]).forEach(m=>{
+      if(!box.querySelector(`[data-msg-id="${m.id}"]`)) box.appendChild(buildChatMsg(m));
+    });
   } else {
-    newMsgs.forEach(m=>box.appendChild(buildChatMsg(m)));
+    newMsgs.forEach(m=>{
+      if(!box.querySelector(`[data-msg-id="${m.id}"]`)) box.appendChild(buildChatMsg(m));
+    });
   }
   if(!box.children.length) box.innerHTML='<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:2rem;">No messages yet. Say hi! 👋</div>';
   if(wasAtBottom||append) box.scrollTop=box.scrollHeight;
@@ -1409,6 +1426,7 @@ function renderChat(newMsgs, append=false) {
 function buildChatMsg(m) {
   const div=document.createElement('div');
   div.className='chat-msg'+(m.type==='legendary_alert'?' sys-leg':'');
+  div.dataset.msgId=m.id;
   const color=m.type==='legendary_alert'?'#f5c542':(hashColor(m.username));
   const initial=(m.username||'?').charAt(0).toUpperCase();
   const timeStr=new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -1459,10 +1477,17 @@ async function sendChatMsg() {
     });
     const d=await r.json();
     if(r.ok){
+      const respData = d;
       input.value='';
       clearAttachment();
-      await loadChat(false);
-      // Start 20s cooldown UI
+      // Insert message directly — do NOT call loadChat (avoids duplicates)
+      if(respData.message && !shownMsgIds.has(respData.message.id)){
+        shownMsgIds.add(respData.message.id);
+        chatMessages.push(respData.message);
+        chatMessages=chatMessages.slice(-200);
+        lastChatTs=respData.message.timestamp;
+        renderChat([respData.message], true);
+      }
       startChatCooldown(20);
     } else if(r.status===429){
       startChatCooldown(d.cooldown||20);
