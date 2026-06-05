@@ -431,8 +431,39 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         p = self.path.split("?")[0]
 
+        # ── GET /api/test-backup ────────────────────────────────
+        if p == "/api/test-backup":
+            result = {"gist_token_set": bool(GIST_TOKEN), "gist_id": GIST_ID}
+            if GIST_TOKEN and GIST_ID:
+                try:
+                    import urllib.error
+                    body = json.dumps({"files":{"users.json":{"content":"TEST"}}}).encode()
+                    req = urllib.request.Request(
+                        f"https://api.github.com/gists/{GIST_ID}",
+                        data=body, method="PATCH",
+                        headers={
+                            "Authorization": f"token {GIST_TOKEN}",
+                            "Content-Type": "application/json",
+                            "User-Agent": "BountyworkTest/1.0",
+                            "Accept": "application/vnd.github.v3+json",
+                        }
+                    )
+                    with urllib.request.urlopen(req, timeout=15) as r:
+                        result["status"] = r.status
+                        result["success"] = r.status == 200
+                except urllib.error.HTTPError as e:
+                    result["error"] = f"HTTP {e.code}: {e.reason}"
+                    result["success"] = False
+                except Exception as e:
+                    result["error"] = str(e)
+                    result["success"] = False
+            else:
+                result["error"] = "Missing GIST_TOKEN or GIST_ID"
+                result["success"] = False
+            self.json_resp(200, result)
+
         # ── GET /api/health ────────────────────────────────────
-        if p == "/api/health":
+        elif p == "/api/health":
             d = load_users()
             self.json_resp(200,{
                 "status": "ok",
