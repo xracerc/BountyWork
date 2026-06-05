@@ -976,12 +976,12 @@ async function submitAuth() {
       const r = await fetch(`${API}/api/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,password:pwd})});
       const d = await r.json();
       if (!r.ok) { setAuthError(d.error); btn.disabled=false; btn.textContent='🎯 Create Account'; return; }
-      loginUser({username:uname, pullsLeft:d.pullsLeft||40, cooldownLeft:d.cooldownLeft||0, collection:[]});
+      loginUser({username:uname, rollCredits:d.rollCredits||40, collection:[]});
     } else {
       const r = await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,password:pwd})});
       const d = await r.json();
       if (!r.ok) { setAuthError(d.error); btn.disabled=false; btn.textContent='🔓 Log In'; return; }
-      loginUser({username:uname, pullsLeft:d.pullsLeft||40, cooldownLeft:d.cooldownLeft||0, collection:d.collection||[]});
+      loginUser({username:uname, rollCredits:d.rollCredits||40, collection:d.collection||[]});
     }
   } catch(e) {
     setAuthError('Server unavailable — try again');
