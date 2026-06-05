@@ -1433,8 +1433,9 @@ function updateLockerBadge(){
 ═══════════════════════════════════════════════ */
 let chatMessages=[], lastChatTs='', chatPollTimer=null;
 let pendingGif='', pendingFlexCard=null;
-const shownMsgIds = new Set(); // prevents duplicate renders
-let chatReady = false;         // only show legendary toasts AFTER initial load
+const shownMsgIds = new Set();
+// Only show legendary toasts for alerts that arrive AFTER this page was loaded
+const PAGE_LOAD_TS = new Date().toISOString();
 
 async function loadChat(initial=false) {
   try {
@@ -1456,12 +1457,12 @@ async function loadChat(initial=false) {
     if(newMsgs.length) lastChatTs=newMsgs[newMsgs.length-1].timestamp;
     renderChat(newMsgs, !initial);
 
-    // Only show legendary toasts for NEW messages AFTER initial load
-    if(chatReady) {
-      newMsgs.filter(m=>m.type==='legendary_alert').forEach(m=>showLegToast(m.text));
-    }
-    if(initial) chatReady=true;
-  } catch(e){ if(initial){ renderChat([]); chatReady=true; } }
+    // Only show legendary toast if the alert was created AFTER this page loaded
+    newMsgs
+      .filter(m => m.type==='legendary_alert' && m.timestamp > PAGE_LOAD_TS)
+      .forEach(m => showLegToast(m.text));
+
+  } catch(e){ if(initial) renderChat([]); }
 }
 
 function renderChat(newMsgs, append=false) {
