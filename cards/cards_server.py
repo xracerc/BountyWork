@@ -38,11 +38,11 @@ LEG_SEC          = 75 * 60     # new legendary every 75 min
 #   UNCOMMON  < 85   (35%)
 #   COMMON    < 100  (15%)
 PULL_TIERS = [
-    ("LEGENDARY", 0.2),
-    ("EPIC",      10.0),
-    ("RARE",      50.0),
-    ("UNCOMMON",  85.0),
-    ("COMMON",    100.0),
+    ("LEGENDARY", 0.2),   # 0.2%
+    ("EPIC",      3.9),   # 3.7%
+    ("RARE",      18.9),  # 15%
+    ("UNCOMMON",  48.9),  # 30%
+    ("COMMON",    100.0), # 45%
 ]
 
 # ── Card templates ────────────────────────────────────────────────────────────
