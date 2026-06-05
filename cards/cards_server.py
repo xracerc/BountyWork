@@ -8,6 +8,7 @@ Bountywork Cards Server
 - Public flex wall
 """
 import sys, json, os, random, threading, time, hashlib
+import urllib.request, urllib.error, urllib.parse
 from datetime import datetime, timezone, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -436,7 +437,6 @@ class Handler(BaseHTTPRequestHandler):
             result = {"gist_token_set": bool(GIST_TOKEN), "gist_id": GIST_ID}
             if GIST_TOKEN and GIST_ID:
                 try:
-                    import urllib.error
                     body = json.dumps({"files":{"users.json":{"content":"TEST"}}}).encode()
                     req = urllib.request.Request(
                         f"https://api.github.com/gists/{GIST_ID}",
