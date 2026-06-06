@@ -927,6 +927,18 @@
   <button class="collect-btn" id="collectBtnMulti" style="display:none;margin-top:1.5rem;" onclick="closeReveal()">+ Add All to Collection</button>
 </div>
 
+<!-- ═══ CONFIRM MODAL ═══ -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <div class="modal-title" style="font-size:1.3rem;">Are you sure?</div>
+    <p class="modal-sub" id="confirmMsg" style="margin-bottom:1.5rem;">This cannot be undone.</p>
+    <div style="display:flex;gap:.6rem;">
+      <button class="modal-btn" id="confirmCancel" style="flex:1;background:rgba(255,255,255,.08);box-shadow:none;">Cancel</button>
+      <button class="modal-btn" id="confirmOk" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ NAV ═══ -->
 <nav>
   <a class="nav-logo" href="#">
@@ -935,7 +947,7 @@
   </a>
   <div class="nav-right">
     <a class="nav-link" href="#flex-section">Community</a>
-    <a class="nav-link" href="#collection-section">My Cards</a>
+    <a class="nav-link" href="#locker-section" onclick="openMyCards();return false;">My Cards</a>
     <div class="nav-user" id="navUser" style="display:none;">
       <div class="dot"></div>
       <span id="navUsername">Hunter</span>
@@ -1088,7 +1100,7 @@
     <div style="display:flex;gap:.5rem;align-items:center;">
       <button class="btn-locker-toggle" onclick="toggleLocker()" id="lockerToggleBtn">Open Locker</button>
       <button class="select-toggle" id="selectToggle" onclick="toggleSelectMode()">☑ Select</button>
-      <button class="coll-clear" onclick="clearCollection()">Clear All</button>
+      <button class="coll-clear" id="clearBtn" onclick="clearCollection()">Clear All</button>
     </div>
   </div>
 
@@ -1522,6 +1534,8 @@ function renderCollection() {
   const badge= document.getElementById('lockerBadge');
   const filt = collFilter==='all' ? collection : collection.filter(c=>c.rarity===collFilter);
   badge.textContent = `${collection.length} card${collection.length!==1?'s':''}`;
+  const clearBtn = document.getElementById('clearBtn');
+  if (clearBtn) clearBtn.textContent = collFilter==='all' ? 'Clear All' : `Clear ${collFilter.charAt(0)+collFilter.slice(1).toLowerCase()}`;
   if (!currentUser) {
     grid.innerHTML=`<div class="empty-coll"><div style="font-size:2rem;margin-bottom:.5rem;">🔒</div><div><a onclick="openAuthModal('register')" style="color:var(--blue);cursor:pointer;font-weight:700;">Sign up or log in</a> to see your cards.</div></div>`;
     return;
@@ -1647,6 +1661,12 @@ function toggleLocker() {
 }
 function updateLockerBadge(){
   document.getElementById('lockerBadge').textContent=`${collection.length} card${collection.length!==1?'s':''}`;
+}
+
+/* "My Cards" nav link → open the locker and jump straight to it */
+function openMyCards(){
+  if(!lockerOpen) toggleLocker();   // expand the locker so the cards are visible
+  document.getElementById('locker-section').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 /* ═══════════════════════════════════════════════
@@ -2028,10 +2048,25 @@ function updateBulkBar() {
   document.getElementById('bulkDeleteBtn').disabled = selectedCards.size === 0;
 }
 
+/* In-app confirm — replaces native confirm() so the browser can't suppress it */
+function uiConfirm(message, okLabel='Delete'){
+  return new Promise(resolve => {
+    const overlay = document.getElementById('confirmModal');
+    const okBtn   = document.getElementById('confirmOk');
+    const noBtn   = document.getElementById('confirmCancel');
+    document.getElementById('confirmMsg').textContent = message;
+    okBtn.textContent = okLabel;
+    overlay.classList.add('open');
+    const done = val => { overlay.classList.remove('open'); okBtn.onclick=null; noBtn.onclick=null; resolve(val); };
+    okBtn.onclick = () => done(true);
+    noBtn.onclick = () => done(false);
+  });
+}
+
 async function bulkDiscard() {
   const count = selectedCards.size;
   if (!count) return;
-  if (!confirm(`Discard ${count} card${count>1?'s':''}? This cannot be undone.`)) return;
+  if (!(await uiConfirm(`Discard ${count} selected card${count>1?'s':''}? This cannot be undone.`))) return;
 
   const ids = Array.from(selectedCards);
   collection = collection.filter(c => !ids.includes(c.instanceId));
@@ -2092,10 +2127,30 @@ async function executeDiscard(scene, data) {
   setTimeout(() => renderCollection(), 460);
 }
 
-function clearCollection() {
-  if (!collection.length) return;
-  if (!confirm('Clear your entire local collection?')) return;
-  collection=[]; localStorage.removeItem('bw_collection'); renderCollection();
+async function clearCollection() {
+  const isAll  = collFilter === 'all';
+  const target = isAll ? collection : collection.filter(c => c.rarity === collFilter);
+  if (!target.length) return;
+  const nice  = isAll ? 'All' : collFilter.charAt(0)+collFilter.slice(1).toLowerCase();
+  const label = isAll
+    ? `your entire collection (${target.length} card${target.length!==1?'s':''})`
+    : `all ${target.length} ${nice} card${target.length!==1?'s':''}`;
+  if (!(await uiConfirm(`Clear ${label}? This cannot be undone.`, 'Clear'))) return;
+  // Remove only the targeted cards locally
+  collection = isAll ? [] : collection.filter(c => c.rarity !== collFilter);
+  localStorage.setItem('bw_collection', JSON.stringify(collection));
+  renderCollection(); updateLockerBadge();
+  // Persist to the server in one call (all, or just this rarity)
+  if (currentUser) {
+    try {
+      await fetch(`${API}/api/clear`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Username':currentUser.username},
+        body: JSON.stringify({username: currentUser.username, rarity: isAll ? 'all' : collFilter})
+      });
+    } catch(e){}
+    loadFlexWall();
+  }
 }
 
 /* ═══════════════════════════════════════════════

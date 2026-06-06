@@ -722,6 +722,28 @@ class Handler(BaseHTTPRequestHandler):
             print(f"[{_ts()}] {uname} discarded card {iid} ({removed} removed)", flush=True)
             self.json_resp(200,{"ok":True,"removed":removed})
 
+        # ── POST /api/clear (clear whole collection, or one rarity) ──
+        elif p == "/api/clear":
+            body   = self.body()
+            uname  = self.headers.get("X-Username","").strip() or body.get("username","").strip()
+            rarity = str(body.get("rarity","all")).strip().upper()
+            if not uname:
+                self.json_resp(401,{"error":"Not logged in"}); return
+            with _lock:
+                d    = load_users()
+                user = d["users"].get(uname)
+                if not user:
+                    self.json_resp(404,{"error":"User not found"}); return
+                before = len(user.get("collection",[]))
+                if rarity in ("", "ALL"):
+                    user["collection"] = []
+                else:
+                    user["collection"] = [c for c in user["collection"] if c.get("rarity") != rarity]
+                removed = before - len(user["collection"])
+                save_users(d)
+            print(f"[{_ts()}] {uname} cleared {removed} card(s) (filter={rarity})", flush=True)
+            self.json_resp(200,{"ok":True,"removed":removed,"remaining":len(user["collection"])})
+
         # ── POST /api/chat ──────────────────────────────────────
         elif p == "/api/chat":
             body  = self.body()
