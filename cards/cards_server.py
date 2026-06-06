@@ -27,7 +27,7 @@ CHAT_FILE  = os.path.join(DATA_DIR, "chat.json")
 PORT       = int(os.environ.get("PORT", 3457))
 
 STARTING_ROLLS   = 40
-CREDIT_INTERVAL  = 15 * 60
+CREDIT_INTERVAL  = 5 * 60
 CREDITS_PER_TICK = 15
 MAX_ROLLS        = 20_000
 MAX_LOCKER       = 100_000
@@ -292,6 +292,49 @@ def _restore_from_gist():
         print(f"[{_ts()}] Gist restore failed: {e}", flush=True)
     return None
 
+def _gist_patch_file(filename, obj):
+    """PATCH a single JSON file into the backup Gist. Returns True on success."""
+    if not (GIST_TOKEN and GIST_ID):
+        return False
+    try:
+        body = json.dumps({
+            "files": {filename: {"content": json.dumps(obj, ensure_ascii=False)}}
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"https://api.github.com/gists/{GIST_ID}",
+            data=body, method="PATCH",
+            headers={
+                "Authorization": f"token {GIST_TOKEN}",
+                "Content-Type": "application/json",
+                "User-Agent": "BountyworkCardsServer/1.0",
+                "Accept": "application/vnd.github.v3+json",
+            }
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return r.status == 200
+    except Exception as e:
+        print(f"[{_ts()}] Gist patch {filename} ERROR: {e}", flush=True)
+        return False
+
+def _gist_get_file(filename):
+    """Fetch and JSON-parse a single file from the backup Gist, or None."""
+    if not (GIST_TOKEN and GIST_ID):
+        return None
+    try:
+        req = urllib.request.Request(
+            f"https://api.github.com/gists/{GIST_ID}",
+            headers={
+                "Authorization": f"token {GIST_TOKEN}",
+                "User-Agent": "BountyworkCardsServer/1.0",
+            }
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            gist = json.loads(r.read().decode("utf-8"))
+            return json.loads(gist["files"][filename]["content"])
+    except Exception as e:
+        print(f"[{_ts()}] Gist get {filename} failed: {e}", flush=True)
+        return None
+
 def load_pool():
     if not os.path.exists(POOL_FILE):
         return {"pool":[],"editionCount":1000,"lastRare":0,"lastEpic":0,"lastLeg":0}
@@ -301,6 +344,9 @@ def load_pool():
 def save_pool(d):
     with open(POOL_FILE,"w",encoding="utf-8") as f:
         json.dump(d,f,indent=2,ensure_ascii=False)
+    # Persist the pool to the Gist too, so it survives redeploys (Render disk is ephemeral)
+    if _gist_patch_file("pool.json", d):
+        print(f"[{_ts()}] Gist saved: {len(d.get('pool',[]))} pool cards", flush=True)
 
 def hash_pw(pw):
     return hashlib.sha256(pw.encode("utf-8")).hexdigest()
@@ -816,7 +862,7 @@ if __name__ == "__main__":
     print(f"  Starting rolls : {STARTING_ROLLS}", flush=True)
     print(f"  Max rolls      : {MAX_ROLLS}", flush=True)
     print(f"  Max locker     : {MAX_LOCKER}", flush=True)
-    print(f"  Credits/15min  : {CREDITS_PER_TICK}", flush=True)
+    print(f"  Credits/5min   : {CREDITS_PER_TICK}", flush=True)
     print(f"  Drop cycle     : every {CYCLE_SEC//60} min", flush=True)
     print(f"  Per cycle      : 1 Leg + 3 Epic + 5 Rare + 7 Uncommon + 10 Common", flush=True)
     print(f"  Template pool  : {sum(len(v) for v in TEMPLATES.values())} unique cards", flush=True)
@@ -843,8 +889,13 @@ if __name__ == "__main__":
             json.dump({"users":{}},f)
         _backup_to_gist({"users":{}})
 
-    # ── POOL: load existing or seed fresh ──────────────────────────────────────
-    if os.path.exists(POOL_FILE):
+    # ── POOL: prefer Gist (survives redeploys), then local, then seed ───────────
+    gist_pool = _gist_get_file("pool.json")
+    if gist_pool and isinstance(gist_pool.get("pool"), list):
+        with open(POOL_FILE,"w",encoding="utf-8") as f:
+            json.dump(gist_pool,f,indent=2,ensure_ascii=False)
+        print(f"  Restored pool from Gist ({len(gist_pool['pool'])} cards)", flush=True)
+    elif os.path.exists(POOL_FILE):
         p = load_pool()
         print(f"  Loaded existing pool ({len(p.get('pool',[]))} cards)", flush=True)
     else:

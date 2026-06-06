@@ -765,6 +765,22 @@
     @keyframes fadein{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
     @keyframes legpulse{0%,100%{filter:drop-shadow(0 0 8px rgba(245,197,66,.5));}50%{filter:drop-shadow(0 0 22px rgba(245,197,66,.9)) drop-shadow(0 0 44px rgba(255,123,0,.4));}}
 
+    /* ════════════ LEGENDARY BROADCAST — everyone sees it, lasts 5s ════════════ */
+    #leg-broadcast{position:fixed;inset:0;z-index:650;pointer-events:none;display:none;overflow:hidden;}
+    #leg-broadcast.active{display:block;}
+    #leg-broadcast .lb-haze{position:absolute;inset:0;
+      background:radial-gradient(circle at 50% 38%,rgba(245,197,66,.30),rgba(245,180,0,.10) 42%,transparent 72%);
+      opacity:0;animation:lbHaze 5s ease-in-out both;}
+    @keyframes lbHaze{0%{opacity:0;}12%{opacity:1;}72%{opacity:1;}100%{opacity:0;}}
+    #leg-broadcast .shooting-star{position:absolute;width:7px;height:7px;border-radius:50%;
+      background:#fff;box-shadow:0 0 14px 5px rgba(255,228,140,.95);opacity:0;}
+    #leg-broadcast .shooting-star::before{content:'';position:absolute;top:50%;right:5px;
+      width:170px;height:2px;transform:translateY(-50%);border-radius:2px;
+      background:linear-gradient(90deg,rgba(255,220,120,0),rgba(255,224,150,.95));}
+    #leg-broadcast .shooting-star.go{animation:lbShoot 1.15s ease-in both;}
+    @keyframes lbShoot{0%{opacity:0;transform:translate(0,0) rotate(28deg);}
+      8%{opacity:1;}100%{opacity:0;transform:translate(115vw,62vh) rotate(28deg);}}
+
     /* ════════════ MOBILE ════════════ */
     @media(max-width:768px){
       /* Nav */
@@ -776,7 +792,7 @@
 
       /* Pull hero */
       #pull-section{padding:5.5rem 1rem 3rem;}
-      .pull-title{font-size:clamp(2.2rem,10vw,3.5rem);}
+      .pull-title{font-size:clamp(2.2rem,10vw,3.5rem);-webkit-text-stroke-width:1.5px;text-shadow:2px 2px 0 #001030,0 0 10px rgba(74,158,255,.4);}
       .pull-sub{font-size:.88rem;}
       .pack{width:148px;height:207px;}
       .pack-logo{font-size:1.6rem;}
@@ -789,9 +805,13 @@
 
       /* Reveal overlay */
       #reveal-overlay{padding:.5rem;}
+      /* x10 reveal: scroll the cards + pin the collect button so it's always reachable */
+      #reveal-overlay.multi-mode{justify-content:flex-start;overflow-y:auto;padding:1.25rem .6rem 5.5rem;}
       #reveal-multi{gap:.6rem;}
       #reveal-multi .rmw .card-scene{width:140px!important;height:196px!important;}
       .collect-btn{font-size:.88rem;padding:.75rem 2rem;}
+      #collectBtnMulti{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);margin:0!important;width:min(90vw,360px);z-index:5;box-shadow:0 8px 30px rgba(0,0,0,.7),0 0 22px rgba(74,158,255,.55);}
+      #collectBtnMulti:hover{transform:translateX(-50%);}
 
       /* Flex wall */
       .flex-podium{flex-direction:column;align-items:center;gap:1rem;}
@@ -876,6 +896,9 @@
   <div class="lt-icon">👑</div>
   <div class="lt-text" id="legToastText">Someone pulled a LEGENDARY!</div>
 </div>
+
+<!-- ═══ LEGENDARY BROADCAST (shooting star + golden haze, everyone, 5s) ═══ -->
+<div id="leg-broadcast"></div>
 
 <!-- ═══ GIF PICKER ═══ -->
 <div id="gif-picker">
@@ -1008,7 +1031,7 @@
   <div class="pull-meta">
     <div class="pull-counter">🎯 Rolls: <span id="pullsLeft">–</span> / 20,000 &nbsp;·&nbsp; Cards pulled: <span id="totalPulls">0</span></div>
     <div class="cooldown-text" id="cooldownText" style="display:none;"></div>
-    <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem;">+15 rolls every 15 min while logged in</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem;">+15 rolls every 5 min while logged in</div>
     <div style="font-size:.72rem;color:var(--blue);margin-top:.1rem;" id="nextCreditLabel"></div>
     <div class="pool-ticker">
       <div class="pt-dot"></div>
@@ -1281,7 +1304,7 @@ async function triggerPull(count) {
   if (rollCredits <= 0) {
     const txt=document.getElementById('cooldownText');
     txt.style.display='block';
-    txt.textContent='⏳ No rolls left! Earn +15 in 15 min.';
+    txt.textContent='⏳ No rolls left! Earn +15 in 5 min.';
     setTimeout(()=>txt.style.display='none',3000);
     return;
   }
@@ -1325,18 +1348,18 @@ function updatePullsUI() {
 }
 
 /* ═══════════════════════════════════════════════
-   ROLL CREDIT TIMER (15 min while logged in)
+   ROLL CREDIT TIMER (5 min while logged in)
 ═══════════════════════════════════════════════ */
 function startCreditTimer() {
   stopCreditTimer();
   if (!currentUser) return;
-  let secsUntilNext = 15 * 60;
+  let secsUntilNext = 5 * 60;
   // Show countdown
   creditCountdown = setInterval(() => {
     if (!currentUser) { stopCreditTimer(); return; }
     secsUntilNext--;
     if (secsUntilNext <= 0) {
-      secsUntilNext = 15 * 60;
+      secsUntilNext = 5 * 60;
       claimCredits();
     }
     const m = Math.floor(secsUntilNext/60), s = secsUntilNext%60;
@@ -1428,6 +1451,7 @@ function showMultiReveal(cards) {
   flash.style.animation='none'; void flash.offsetWidth;
   flash.style.animation='rflash 1s ease both';
   ov.classList.add('active');
+  ov.classList.add('multi-mode');
   if (sorted[0].rarity==='LEGENDARY') setTimeout(()=>launchLegendaryEffect(), 200);
 
   sorted.forEach((card,i) => {
@@ -1441,7 +1465,7 @@ function showMultiReveal(cards) {
 }
 
 function closeReveal() {
-  document.getElementById('reveal-overlay').classList.remove('active');
+  document.getElementById('reveal-overlay').classList.remove('active','multi-mode');
   collection.push(...pendingCards);
   localStorage.setItem('bw_collection', JSON.stringify(collection));
   pendingCards=[];
@@ -1644,6 +1668,26 @@ function showLegToast(text) {
   }, 7000);
 }
 
+/* Everyone-sees-it celebration when ANY user pulls a Legendary: shooting stars + golden haze, 5s */
+let _legBroadcastTimer = null;
+function playLegendaryBroadcast() {
+  const box = document.getElementById('leg-broadcast');
+  if (!box) return;
+  box.innerHTML = '<div class="lb-haze"></div>';
+  for (let i = 0; i < 4; i++) {
+    const s = document.createElement('div');
+    s.className = 'shooting-star';
+    s.style.top  = (4 + Math.random()*32) + '%';
+    s.style.left = (-18 + Math.random()*28) + '%';
+    s.style.animationDelay = (0.15 + i*0.55 + Math.random()*0.25) + 's';
+    box.appendChild(s);
+    requestAnimationFrame(() => s.classList.add('go'));
+  }
+  box.classList.add('active');
+  clearTimeout(_legBroadcastTimer);
+  _legBroadcastTimer = setTimeout(() => { box.classList.remove('active'); box.innerHTML = ''; }, 5000);
+}
+
 /* ═══════════════════════════════════════════════
    LOCKER
 ═══════════════════════════════════════════════ */
@@ -1698,10 +1742,10 @@ async function loadChat(initial=false) {
     if(newMsgs.length) lastChatTs=newMsgs[newMsgs.length-1].timestamp;
     renderChat(newMsgs, !initial);
 
-    // Only show legendary toast if the alert was created AFTER this page loaded
-    newMsgs
-      .filter(m => m.type==='legendary_alert' && m.timestamp > PAGE_LOAD_TS)
-      .forEach(m => showLegToast(m.text));
+    // Legendary alert created AFTER page load → toast + broadcast effect everyone sees
+    const legAlerts = newMsgs.filter(m => m.type==='legendary_alert' && m.timestamp > PAGE_LOAD_TS);
+    legAlerts.forEach(m => showLegToast(m.text));
+    if (legAlerts.length) playLegendaryBroadcast();
 
   } catch(e){ if(initial) renderChat([]); }
 }
